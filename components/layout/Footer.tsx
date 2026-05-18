@@ -136,6 +136,15 @@ export default function Footer() {
     }
   };
 
+  const copyPhoneNumber = async () => {
+    try {
+      await navigator.clipboard.writeText("+63 928 803 6865");
+      toast.success("Phone number copied");
+    } catch {
+      toast.error("Unable to copy phone number");
+    }
+  };
+
   return (
     <>
       <footer className="relative w-full overflow-hidden border-t border-brown/20 bg-gradient-to-b from-cream via-cream to-amber-50/70 text-brown">
@@ -169,18 +178,26 @@ export default function Footer() {
                   views, and warm local hospitality.
                 </p>
                 <div className="mt-5 flex items-center gap-3">
-                  {["facebook", "twitter", "instagram"].map((social) => (
+                  {["facebook"].map((social) => (
                     <motion.img
                       key={social}
                       whileHover={
                         shouldReduceMotion ? {} : { y: -2, scale: 1.04 }
                       }
                       transition={{ duration: 0.2 }}
-                      className="h-8 w-8 cursor-pointer rounded-sm border border-brown/10 bg-white/60 p-1.5"
+                      className="h-10 w-10 cursor-pointer rounded-sm border border-brown/10 bg-white/60 p-1.5"
                       src={`svg/${social}.svg`}
                       alt={social[0].toUpperCase() + social.slice(1)}
                     />
                   ))}
+                  <button
+                    type="button"
+                    onClick={copyPhoneNumber}
+                    className="rounded-md border border-brown/20 bg-white/70 px-3 py-2 text-sm font-medium text-brown transition-colors hover:bg-brown/5"
+                    aria-label="Copy phone number"
+                  >
+                    +63 928 803 6865
+                  </button>
                 </div>
               </div>
             </motion.div>

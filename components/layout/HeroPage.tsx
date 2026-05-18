@@ -96,10 +96,10 @@ export default function HeroPage() {
                     },
                   }}
                 >
-                  Lorem ipsum, dolor sit amet consectetur adipisicing elit. Sunt
-                  nostrum at incidunt possimus, quisquam consectetur dolorem
-                  totam non. Adipisci magnam aliquam saepe provident! Cum quam
-                  sint modi.
+                  Escape to Tiripon Spring Resort and enjoy a refreshing
+                  day-stay with scenic views, peaceful cabanas, and a relaxing
+                  atmosphere for families and friends. Plan your visit in
+                  minutes and reserve your preferred cottage with ease.
                 </motion.p>
 
                 <motion.div

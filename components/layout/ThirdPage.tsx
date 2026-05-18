@@ -99,7 +99,7 @@ export default function ThirdPage() {
             </h2>
           </div>
 
-          <div className="relative z-30 flex flex-col items-start">
+          <div className="relative z-30 flex flex-col items-start gap-2">
             {resortSlides.map((slide, index) => (
               <Button
                 key={slide.name}
