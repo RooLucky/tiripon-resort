@@ -25,9 +25,9 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const receiptId = Number(id);
+  const receiptId = id.trim();
 
-  if (!Number.isInteger(receiptId)) {
+  if (!receiptId) {
     return Response.json({ error: "Invalid receipt id." }, { status: 400 });
   }
 
