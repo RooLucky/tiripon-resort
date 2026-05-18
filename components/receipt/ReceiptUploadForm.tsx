@@ -25,15 +25,13 @@ type UploadConfirmation = {
 };
 
 function getRedirectUrl() {
-  if (typeof window === "undefined") return "https://tiripon-resort.vercel.app";
+  if (typeof window === "undefined") return process.env.AUTH_URL;
 
   const isLocalhost =
     window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1";
 
-  return isLocalhost
-    ? "http://localhost:3000"
-    : "https://tiripon-resort.vercel.app";
+  return isLocalhost ? "http://localhost:3000" : process.env.AUTH_URL ?? "https://www.tiripon-spring-resort.com";
 }
 
 function formatDateTime(value: string | null) {

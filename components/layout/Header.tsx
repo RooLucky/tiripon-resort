@@ -240,7 +240,7 @@ export default function Header() {
                 </DrawerHeader>
                 <div className="grid gap-3 px-5 pb-6">
                   <a
-                    href="/tiripon-resort"
+                    href="/home"
                     className="rounded-lg border border-brown/20 bg-white px-4 py-3 text-center font-googlesansflex text-base font-semibold text-brown transition-colors hover:bg-sand/40"
                   >
                     Homepage
@@ -264,7 +264,7 @@ export default function Header() {
 
           {/* Logo */}
           <li>
-            <a href="/tiripon-resort">
+            <a href="/home">
               <Image
                 src={logoSrc}
                 alt="Logo"
