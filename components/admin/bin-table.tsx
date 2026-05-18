@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/dialog";
 
 type Row = {
-  id: number;
+  id: string;
   name: string;
   email: string | null;
   phone: string | null;
@@ -55,10 +55,10 @@ export function BinTable({
   filter: "all" | "paid" | "unpaid";
   selectedSize: number;
 }) {
-  const [selected, setSelected] = useState<number[]>([]);
+  const [selected, setSelected] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [detailsRow, setDetailsRow] = useState<Row | null>(null);
   const [isPending, startTransition] = useTransition();
   const allSelected = rows.length > 0 && selected.length === rows.length;

@@ -14,10 +14,9 @@ async function requireAdmin() {
   }
 }
 
-export async function deleteBooking(bookingId: number) {
+export async function deleteBooking(bookingId: string) {
   await requireAdmin();
-
-  if (!Number.isInteger(bookingId)) {
+  if (typeof bookingId !== "string" || bookingId.trim().length === 0) {
     throw new Error("Invalid booking id.");
   }
 
@@ -36,11 +35,10 @@ export async function deleteBooking(bookingId: number) {
 }
 
 export async function permanentlyDeleteBooking(
-  bookingId: number,
+  bookingId: string,
 ) {
   await requireAdmin();
-
-  if (!Number.isInteger(bookingId)) {
+  if (typeof bookingId !== "string" || bookingId.trim().length === 0) {
     throw new Error("Invalid booking id.");
   }
 
@@ -62,10 +60,13 @@ export async function permanentlyDeleteBooking(
 }
 
 export async function bulkPermanentlyDeleteBookings(
-  bookingIds: number[],
+  bookingIds: string[],
 ) {
   await requireAdmin();
-  const ids = bookingIds.filter((id) => Number.isInteger(id));
+  const ids = bookingIds
+    .filter((id) => typeof id === "string")
+    .map((id) => id.trim())
+    .filter((id) => id.length > 0);
   if (ids.length === 0) return;
 
   for (const id of ids) {
@@ -81,9 +82,12 @@ export async function bulkPermanentlyDeleteBookings(
   revalidatePath("/bin");
 }
 
-export async function bulkSoftDeleteBookings(bookingIds: number[]) {
+export async function bulkSoftDeleteBookings(bookingIds: string[]) {
   await requireAdmin();
-  const ids = bookingIds.filter((id) => Number.isInteger(id));
+  const ids = bookingIds
+    .filter((id) => typeof id === "string")
+    .map((id) => id.trim())
+    .filter((id) => id.length > 0);
   if (ids.length === 0) return;
 
   await prisma.booking.updateMany({
@@ -120,10 +124,9 @@ export async function cleanRecycleBin() {
   revalidatePath("/bin");
 }
 
-export async function confirmReceipt(receiptId: number) {
+export async function confirmReceipt(receiptId: string) {
   await requireAdmin();
-
-  if (!Number.isInteger(receiptId)) {
+  if (typeof receiptId !== "string" || receiptId.trim().length === 0) {
     throw new Error("Invalid receipt id.");
   }
 
@@ -166,9 +169,9 @@ export async function createChatNode(formData: FormData) {
 export async function updateChatNode(formData: FormData) {
   await requireAdmin();
 
-  const id = Number(formData.get("id"));
-
-  if (!Number.isInteger(id)) {
+  const idValue = formData.get("id");
+  const id = typeof idValue === "string" ? idValue.trim() : "";
+  if (!id) {
     throw new Error("Invalid chat node id.");
   }
 
@@ -188,10 +191,9 @@ export async function updateChatNode(formData: FormData) {
   revalidatePath("/chatbot-management");
 }
 
-export async function deleteChatNode(chatNodeId: number) {
+export async function deleteChatNode(chatNodeId: string) {
   await requireAdmin();
-
-  if (!Number.isInteger(chatNodeId)) {
+  if (typeof chatNodeId !== "string" || chatNodeId.trim().length === 0) {
     throw new Error("Invalid chat node id.");
   }
 

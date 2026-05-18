@@ -18,7 +18,7 @@ import {
 import { Trash } from "lucide-react";
 import { Button } from "../ui/button";
 
-export function SingleDeleteControl({ bookingId }: { bookingId: number }) {
+export function SingleDeleteControl({ bookingId }: { bookingId: string }) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -60,8 +60,8 @@ export function SingleDeleteControl({ bookingId }: { bookingId: number }) {
   );
 }
 
-export function BulkDeleteControl({ bookingIds }: { bookingIds: number[] }) {
-  const [selected, setSelected] = useState<number[]>([]);
+export function BulkDeleteControl({ bookingIds }: { bookingIds: string[] }) {
+  const [selected, setSelected] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 

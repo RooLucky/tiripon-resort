@@ -9,6 +9,42 @@ type ReservationEmailPayload = {
   downPaymentAmount: number;
 };
 
+function getPublicSiteUrl() {
+  const raw =
+    process.env.AUTH_URL ??
+    process.env.NEXTAUTH_URL ??
+    process.env.APP_URL ??
+    process.env.VERCEL_PROJECT_PRODUCTION_URL;
+
+  if (!raw) return null;
+
+  const normalized = raw.startsWith("http") ? raw : `https://${raw}`;
+
+  try {
+    return new URL(normalized);
+  } catch {
+    return null;
+  }
+}
+
+function resolveReceiptUrl(receiptUrl: string) {
+  const publicSiteUrl = getPublicSiteUrl();
+  if (!publicSiteUrl) return receiptUrl;
+
+  try {
+    const incoming = new URL(receiptUrl);
+    const incomingHost = incoming.hostname.toLowerCase();
+
+    if (incomingHost === "localhost" || incomingHost === "127.0.0.1") {
+      return new URL(incoming.pathname + incoming.search, publicSiteUrl).toString();
+    }
+
+    return receiptUrl;
+  } catch {
+    return new URL(receiptUrl, publicSiteUrl).toString();
+  }
+}
+
 function getSmtpConfig() {
   const host = process.env.SMTP_HOST;
   const port = Number(process.env.SMTP_PORT ?? 587);
@@ -53,7 +89,8 @@ export async function sendReservationEmail({
 }: ReservationEmailPayload) {
   const smtp = getSmtpConfig();
   const safeName = escapeHtml(name);
-  const safeReceiptUrl = escapeHtml(receiptUrl);
+  const publicReceiptUrl = resolveReceiptUrl(receiptUrl);
+  const safeReceiptUrl = escapeHtml(publicReceiptUrl);
   const formattedTotalPrice = formatCurrency(totalPrice);
   const formattedDownPaymentAmount = formatCurrency(downPaymentAmount);
   const transporter = nodemailer.createTransport({
@@ -83,7 +120,7 @@ export async function sendReservationEmail({
       `Required down payment: ${formattedDownPaymentAmount}`,
       "",
       "After completing your payment, upload your receipt using this confirmation link:",
-      receiptUrl,
+      publicReceiptUrl,
       "",
       "Please note that the confirmation link is valid for 30 minutes from the time your reservation request was created.",
       "",
