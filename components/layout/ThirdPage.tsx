@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { ArrowRight, MoveLeft, MoveRight } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/button";
 
 const resortSlides = [
@@ -35,29 +35,43 @@ const resortSlides = [
 
 export default function ThirdPage() {
   const [activeIndex, setActiveIndex] = useState(0);
+  const autoplayRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => {
-    const autoplayInterval = setInterval(() => {
+  const startAutoplay = () => {
+    if (autoplayRef.current) {
+      clearInterval(autoplayRef.current);
+    }
+
+    autoplayRef.current = setInterval(() => {
       setActiveIndex(
         (currentIndex) => (currentIndex + 1) % resortSlides.length,
       );
     }, 10000);
+  };
 
-    return () => clearInterval(autoplayInterval);
+  useEffect(() => {
+    startAutoplay();
+
+    return () => {
+      if (autoplayRef.current) clearInterval(autoplayRef.current);
+    };
   }, []);
 
   const handleSlideSelect = (index: number) => {
     setActiveIndex(index);
+    startAutoplay();
   };
 
   const handlePreviousSlide = () => {
     setActiveIndex((currentIndex) =>
       currentIndex === 0 ? resortSlides.length - 1 : currentIndex - 1,
     );
+    startAutoplay();
   };
 
   const handleNextSlide = () => {
     setActiveIndex((currentIndex) => (currentIndex + 1) % resortSlides.length);
+    startAutoplay();
   };
 
   const activeSlide = resortSlides[activeIndex] ?? resortSlides[0];
@@ -206,42 +220,40 @@ export default function ThirdPage() {
             </Button>
 
             <div className="mt-4 space-y-3 md:hidden">
-              <div
-                className="flex items-center justify-center gap-2"
-                aria-label="Select resort image"
-              >
-                {resortSlides.map((slide, index) => (
-                  <button
-                    key={slide.name}
-                    type="button"
-                    onClick={() => handleSlideSelect(index)}
-                    aria-label={`Show ${slide.name}`}
-                    aria-current={index === activeIndex ? "true" : undefined}
-                    className={`h-2.5 rounded-full transition-all ${
-                      index === activeIndex
-                        ? "w-8 bg-brown"
-                        : "w-2.5 bg-brown/30"
-                    }`}
-                  />
-                ))}
-              </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2 items-center">
                 <Button
                   type="button"
                   onClick={handlePreviousSlide}
                   variant="outline"
-                  className="h-10 rounded-full border-brown/25 bg-cream text-brown hover:bg-khaki/50"
+                  className="h-10 rounded-full border-none bg-transparent text-brown hover:bg-khaki/50"
                 >
                   <MoveLeft className="mr-1 size-4" />
-                  Previous
                 </Button>
+                <div
+                  className="flex items-center justify-center gap-2"
+                  aria-label="Select resort image"
+                >
+                  {resortSlides.map((slide, index) => (
+                    <button
+                      key={slide.name}
+                      type="button"
+                      onClick={() => handleSlideSelect(index)}
+                      aria-label={`Show ${slide.name}`}
+                      aria-current={index === activeIndex ? "true" : undefined}
+                      className={`h-2.5 rounded-full transition-all ${
+                        index === activeIndex
+                          ? "w-8 bg-brown"
+                          : "w-2.5 bg-brown/30"
+                      }`}
+                    />
+                  ))}
+                </div>
                 <Button
                   type="button"
                   onClick={handleNextSlide}
                   variant="outline"
-                  className="h-10 rounded-full border-brown/25 bg-cream text-brown hover:bg-khaki/50"
+                  className="h-10 rounded-full border-none bg-transparent text-brown hover:bg-khaki/50"
                 >
-                  Next
                   <MoveRight className="ml-1 size-4" />
                 </Button>
               </div>

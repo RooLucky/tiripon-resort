@@ -12,9 +12,10 @@ import { DatePicker } from "./DatePicker";
 import { Button } from "../ui/button";
 import {
   Carousel,
-  type CarouselApi,
   CarouselContent,
   CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
 } from "../ui/carousel";
 import {
   Dialog,
@@ -136,8 +137,6 @@ export default function SecondPage() {
   const [children, setChildren] = useState(0);
   const [olderGuests, setOlderGuests] = useState(0);
   const [formError, setFormError] = useState<string | null>(null);
-  const [cottageCarouselApi, setCottageCarouselApi] =
-    useState<CarouselApi | null>(null);
   const [unavailableCottageNames, setUnavailableCottageNames] = useState<
     string[]
   >([]);
@@ -582,7 +581,6 @@ export default function SecondPage() {
 
                   <Carousel
                     opts={{ align: "start", loop: true }}
-                    setApi={(api) => setCottageCarouselApi(api ?? null)}
                     className="mt-6"
                   >
                     <CarouselContent>
@@ -730,7 +728,7 @@ export default function SecondPage() {
                         );
                       })}
                     </CarouselContent>
-                    <Button
+                    <CarouselPrevious
                       type="button"
                       size="icon-lg"
                       variant="outline"
@@ -739,12 +737,11 @@ export default function SecondPage() {
                       onClick={(event) => {
                         event.preventDefault();
                         event.stopPropagation();
-                        cottageCarouselApi?.scrollPrev();
                       }}
                     >
                       <ChevronLeft />
-                    </Button>
-                    <Button
+                    </CarouselPrevious>
+                    <CarouselNext
                       type="button"
                       size="icon-lg"
                       variant="outline"
@@ -753,11 +750,10 @@ export default function SecondPage() {
                       onClick={(event) => {
                         event.preventDefault();
                         event.stopPropagation();
-                        cottageCarouselApi?.scrollNext();
                       }}
                     >
                       <ChevronRight />
-                    </Button>
+                    </CarouselNext>
                   </Carousel>
                 </div>
 

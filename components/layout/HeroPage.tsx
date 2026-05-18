@@ -41,7 +41,7 @@ export default function HeroPage() {
         animate={{ scale: 1 }}
         transition={{ duration: 1.4, ease: "easeOut" }}
       />
-      {/* <div className="absolute inset-0 bg-white/10" /> */}
+      <div className="absolute inset-0 bg-white/5" />
       {/* Overlay */}
       <div className="absolute inset-0 z-10 ">
         <div className="z-10 w-full h-full  flex flex-row justify-between items-center">
