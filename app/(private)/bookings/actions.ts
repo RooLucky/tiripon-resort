@@ -5,12 +5,29 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getReceiptsBucketName, getSupabaseAdminClient } from "@/lib/supabase-server";
 
 async function requireAdmin() {
   const session = await auth();
 
   if (!session?.user) {
     redirect("/login");
+  }
+}
+
+async function deleteReceiptProofFromStorage(proofFilePath: string | null | undefined) {
+  if (!proofFilePath) return;
+
+  try {
+    const supabase = getSupabaseAdminClient();
+    const bucket = getReceiptsBucketName();
+    const { error } = await supabase.storage.from(bucket).remove([proofFilePath]);
+
+    if (error) {
+      console.error("Failed to delete receipt proof from storage:", error.message);
+    }
+  } catch (error) {
+    console.error("Failed to initialize storage cleanup:", error);
   }
 }
 
@@ -50,6 +67,8 @@ export async function permanentlyDeleteBooking(
   if (!booking || booking.deleted !== true) {
     throw new Error("Booking not found in recycle bin.");
   }
+
+  await deleteReceiptProofFromStorage(booking.receipt?.proofFilePath);
 
   await prisma.booking.delete({
     where: { id: bookingId },
@@ -117,6 +136,7 @@ export async function cleanRecycleBin() {
   });
 
   for (const booking of eligible) {
+    await deleteReceiptProofFromStorage(booking.receipt?.proofFilePath);
     await prisma.booking.delete({ where: { id: booking.id } });
   }
 

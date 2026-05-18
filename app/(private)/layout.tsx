@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import {
   BotMessageSquare,
   CalendarCheck,
@@ -31,6 +32,9 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const cookieStore = await cookies();
+  const sidebarState = cookieStore.get("sidebar_state")?.value;
+  const defaultSidebarOpen = sidebarState ? sidebarState === "true" : true;
   const session = await auth();
 
   if (!session?.user) {
@@ -46,7 +50,7 @@ export default async function AdminLayout({
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={defaultSidebarOpen}>
       <Sidebar collapsible="icon">
         <SidebarHeader>
           <SidebarMenu>
