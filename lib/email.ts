@@ -14,7 +14,8 @@ function getPublicSiteUrl() {
     process.env.AUTH_URL ??
     process.env.NEXTAUTH_URL ??
     process.env.APP_URL ??
-    process.env.VERCEL_PROJECT_PRODUCTION_URL;
+    process.env.VERCEL_PROJECT_PRODUCTION_URL ??
+    "https://www.tiripon-spring-resort.com";
 
   if (!raw) return null;
 
