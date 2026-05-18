@@ -190,9 +190,11 @@ export default function SecondPage() {
             cache: "no-store",
           },
         );
-        const data = response.ok
-          ? ((await response.json()) as { unavailableCottageNames?: string[] })
-          : null;
+        const contentType = response.headers.get("content-type") ?? "";
+        const data =
+          response.ok && contentType.includes("application/json")
+            ? ((await response.json()) as { unavailableCottageNames?: string[] })
+            : null;
         const unavailableNames = Array.isArray(data?.unavailableCottageNames)
           ? data.unavailableCottageNames
           : [];

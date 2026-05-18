@@ -32,13 +32,16 @@ export function useBookingRequest() {
         body: JSON.stringify(payload),
       });
 
-      const result = (await response.json()) as
-        | BookingResponse
-        | { error?: string };
+      const contentType = response.headers.get("content-type") ?? "";
+      const isJson = contentType.includes("application/json");
+      const result = isJson
+        ? ((await response.json()) as BookingResponse | { error?: string })
+        : null;
 
       if (!response.ok) {
-        const message =
-          "error" in result ? result.error : "Booking request failed.";
+        const message = result && "error" in result
+          ? result.error
+          : `Booking request failed (HTTP ${response.status}).`;
 
         if (response.status === 409) {
           toast.error("Cottage already taken", {
@@ -49,6 +52,10 @@ export function useBookingRequest() {
         }
 
         throw new Error(message ?? "Booking request failed.");
+      }
+
+      if (!result) {
+        throw new Error("Server returned an invalid response format.");
       }
 
       setState({

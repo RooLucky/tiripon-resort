@@ -21,7 +21,7 @@ export type BookingRequestPayload = {
 
 export type BookingResponse = {
   booking: {
-    id: number;
+    id: string;
     name: string;
     email: string | null;
     phone: string | null;
@@ -34,13 +34,13 @@ export type BookingResponse = {
     checkoutTime: string;
     createdAt: string;
     cottage: Array<{
-      id: number;
+      id: string;
       name: string;
       description: string;
       price: number;
     }>;
     receipt: {
-      id: number;
+      id: string;
       downPaymentAmount: number;
       status: string;
     } | null;
