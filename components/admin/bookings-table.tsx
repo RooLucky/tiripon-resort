@@ -52,7 +52,7 @@ import {
 import { getSupabaseBrowserClient } from "@/lib/supabase-client";
 
 type BookingRow = {
-  id: number;
+  id: string;
   name: string;
   email: string | null;
   phone: string | null;
@@ -65,13 +65,13 @@ type BookingRow = {
   createdAt: string;
   createdAtIso: string;
   cottages: Array<{
-    id: number;
+    id: string;
     name: string;
     description: string;
     price: string;
   }>;
   receipt: {
-    id: number;
+    id: string;
     status: string;
     receiptConfirmation: boolean;
     downPaymentAmount: string;
@@ -114,7 +114,7 @@ export function BookingsTable({
     mimeType: string | null;
   } | null>(null);
   const [proofZoom, setProofZoom] = useState(1);
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isPending, startTransition] = useTransition();
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [isRealtimeSubscribed, setIsRealtimeSubscribed] = useState(false);

@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 
 type ReceiptUploadFormProps = {
-  receiptId: number;
+  receiptId: string;
   disabled: boolean;
   isPaid: boolean;
 };

@@ -40,7 +40,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 type ChatNode = {
-  id: number;
+  id: string;
   question: string;
   answer: string;
   createdAt: string;
