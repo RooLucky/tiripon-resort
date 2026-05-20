@@ -85,9 +85,9 @@ export default async function RecycleBin({
   const pageCount = Math.max(Math.ceil(totalBookings / selectedSize), 1);
 
   return (
-    <main className="flex flex-1 flex-col gap-6 p-4 md:p-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Recycle Bin</h1>
+    <main className="flex flex-1 flex-col gap-6 p-4 md:p-7">
+      <div className="rounded-xl border border-border/80 bg-card/80 p-5 shadow-sm">
+        <h1 className="text-3xl leading-tight text-brown">Recycle Bin</h1>
         <p className="text-sm text-muted-foreground">
           Soft-deleted bookings. Permanent deletion is allowed after 10 days.
         </p>
@@ -113,7 +113,7 @@ export default async function RecycleBin({
         }))}
       />
 
-      <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card/70 p-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
         <p>
           Showing {deletedBookings.length === 0 ? 0 : skip + 1}-
           {Math.min(skip + deletedBookings.length, totalBookings)} of{" "}

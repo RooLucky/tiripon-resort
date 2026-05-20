@@ -370,6 +370,15 @@ export default function SecondPage() {
         timezoneOffset: new Date().getTimezoneOffset(),
       });
       setIsBookingModalOpen(false);
+      setName("");
+      setEmail("");
+      setPhone("");
+      setSelectedCottageId(null);
+      setChildren(0);
+      setOlderGuests(0);
+      setDate(undefined);
+      setCheckInTime("6:00 AM");
+      setFormError(null);
       toast.success("Booking request created", {
         description: result.message,
         duration: 3500,
@@ -640,46 +649,12 @@ export default function SecondPage() {
                                     sizes="(min-width: 1024px) 36vw, 82vw"
                                   />
                                 ) : (
-                                  <div className="flex h-full w-full items-center justify-center bg-stone/40">
-                                    <svg
-                                      viewBox="0 0 64 64"
-                                      className="size-18 text-brown/60"
-                                      fill="none"
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      aria-hidden="true"
-                                    >
-                                      <path
-                                        d="M8 30L32 12L56 30"
-                                        stroke="currentColor"
-                                        strokeWidth="3"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      />
-                                      <path
-                                        d="M14 28V52H50V28"
-                                        stroke="currentColor"
-                                        strokeWidth="3"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      />
-                                      <path
-                                        d="M26 52V38H38V52"
-                                        stroke="currentColor"
-                                        strokeWidth="3"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      />
-                                      <rect
-                                        x="40"
-                                        y="16"
-                                        width="7"
-                                        height="11"
-                                        rx="1"
-                                        stroke="currentColor"
-                                        strokeWidth="3"
-                                      />
-                                    </svg>
-                                  </div>
+                                  <Image
+                                    src={"/logo/web.png"}
+                                    alt={cottage.name}
+                                    fill
+                                    className="object-contain"
+                                  />
                                 )}
                                 <motion.span
                                   className="absolute right-3 top-3 flex size-9 items-center justify-center bg-white text-brown shadow"
@@ -751,11 +726,7 @@ export default function SecondPage() {
                       size="icon-lg"
                       variant="outline"
                       aria-label="Previous cottage"
-                      className="absolute left-3 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white text-brown shadow-lg shadow-brown/15"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                      }}
+                      className="absolute left-3 top-1/2 z-40 flex -translate-y-1/2 rounded-full bg-white/95 text-brown shadow-lg shadow-brown/15"
                     >
                       <ChevronLeft />
                     </CarouselPrevious>
@@ -764,11 +735,7 @@ export default function SecondPage() {
                       size="icon-lg"
                       variant="outline"
                       aria-label="Next cottage"
-                      className="absolute right-3 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white text-brown shadow-lg shadow-brown/15"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                      }}
+                      className="absolute right-3 top-1/2 z-40 flex -translate-y-1/2 rounded-full bg-white/95 text-brown shadow-lg shadow-brown/15"
                     >
                       <ChevronRight />
                     </CarouselNext>

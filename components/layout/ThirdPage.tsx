@@ -165,7 +165,7 @@ export default function ThirdPage() {
           </motion.div>
 
           <motion.div
-            className="relative"
+            className="group/carousel relative"
             variants={{
               hidden: { opacity: 0, scale: 0.97 },
               visible: {
@@ -205,7 +205,7 @@ export default function ThirdPage() {
               size="icon-lg"
               onClick={handlePreviousSlide}
               aria-label="Previous slide"
-              className="absolute left-2 top-1/2 z-20 hidden size-11 -translate-y-1/2 rounded-full border border-cream bg-tan text-brown shadow-md hover:bg-khaki sm:size-10 md:-left-10 md:flex md:size-14"
+              className="absolute left-3 top-1/2 z-40 hidden size-11 -translate-y-1/2 rounded-full border border-cream bg-tan/95 text-brown opacity-0 shadow-md transition-opacity duration-200 hover:bg-khaki group-hover/carousel:opacity-100 md:flex md:size-12"
             >
               <MoveLeft className="size-5 sm:size-6 md:size-8" />
             </Button>
@@ -214,49 +214,67 @@ export default function ThirdPage() {
               size="icon-lg"
               onClick={handleNextSlide}
               aria-label="Next slide"
-              className="absolute right-2 top-1/2 z-20 hidden size-11 -translate-y-1/2 rounded-full border border-cream bg-tan text-brown shadow-md hover:bg-khaki sm:size-10 md:-right-10 md:flex md:size-14"
+              className="absolute right-3 top-1/2 z-40 hidden size-11 -translate-y-1/2 rounded-full border border-cream bg-tan/95 text-brown opacity-0 shadow-md transition-opacity duration-200 hover:bg-khaki group-hover/carousel:opacity-100 md:flex md:size-12"
             >
               <MoveRight className="size-5 sm:size-6 md:size-8" />
             </Button>
-
-            <div className="mt-4 space-y-3 md:hidden">
-              <div className="grid grid-cols-3 gap-2 items-center">
-                <Button
-                  type="button"
-                  onClick={handlePreviousSlide}
-                  variant="outline"
-                  className="h-10 rounded-full border-none bg-transparent text-brown hover:bg-khaki/50"
-                >
-                  <MoveLeft className="mr-1 size-4" />
-                </Button>
-                <div
-                  className="flex items-center justify-center gap-2"
-                  aria-label="Select resort image"
-                >
-                  {resortSlides.map((slide, index) => (
-                    <button
-                      key={slide.name}
-                      type="button"
-                      onClick={() => handleSlideSelect(index)}
-                      aria-label={`Show ${slide.name}`}
-                      aria-current={index === activeIndex ? "true" : undefined}
-                      className={`h-2.5 rounded-full transition-all ${
-                        index === activeIndex
-                          ? "w-8 bg-brown"
-                          : "w-2.5 bg-brown/30"
-                      }`}
-                    />
-                  ))}
-                </div>
-                <Button
-                  type="button"
-                  onClick={handleNextSlide}
-                  variant="outline"
-                  className="h-10 rounded-full border-none bg-transparent text-brown hover:bg-khaki/50"
-                >
-                  <MoveRight className="ml-1 size-4" />
-                </Button>
+            <div className="mt-4 flex items-center justify-center gap-2 md:hidden">
+              <Button
+                type="button"
+                onClick={handlePreviousSlide}
+                variant="outline"
+                size="icon-sm"
+                className="h-8 w-8 rounded-full border-brown/30 bg-transparent text-brown hover:bg-khaki/40"
+                aria-label="Previous slide"
+              >
+                <MoveLeft className="size-4" />
+              </Button>
+              <div
+                className="flex items-center justify-center gap-2"
+                aria-label="Select resort image"
+              >
+                {resortSlides.map((slide, index) => (
+                  <button
+                    key={slide.name}
+                    type="button"
+                    onClick={() => handleSlideSelect(index)}
+                    aria-label={`Show ${slide.name}`}
+                    aria-current={index === activeIndex ? "true" : undefined}
+                    className={`h-2.5 rounded-full transition-all ${
+                      index === activeIndex
+                        ? "w-8 bg-brown"
+                        : "w-2.5 bg-brown/30"
+                    }`}
+                  />
+                ))}
               </div>
+              <Button
+                type="button"
+                onClick={handleNextSlide}
+                variant="outline"
+                size="icon-sm"
+                className="h-8 w-8 rounded-full border-brown/30 bg-transparent text-brown hover:bg-khaki/40"
+                aria-label="Next slide"
+              >
+                <MoveRight className="size-4" />
+              </Button>
+            </div>
+            <div
+              className="mt-4 hidden items-center justify-center gap-2 md:flex"
+              aria-label="Select resort image"
+            >
+              {resortSlides.map((slide, index) => (
+                <button
+                  key={slide.name}
+                  type="button"
+                  onClick={() => handleSlideSelect(index)}
+                  aria-label={`Show ${slide.name}`}
+                  aria-current={index === activeIndex ? "true" : undefined}
+                  className={`h-2.5 rounded-full transition-all ${
+                    index === activeIndex ? "w-8 bg-brown" : "w-2.5 bg-brown/30"
+                  }`}
+                />
+              ))}
             </div>
           </motion.div>
         </motion.div>

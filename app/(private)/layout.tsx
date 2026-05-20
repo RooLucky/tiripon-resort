@@ -57,16 +57,20 @@ export default async function AdminLayout({
         <SidebarRail />
       </Sidebar>
       <SidebarInset>
-        <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border/80 bg-background/90 px-5 shadow-[0_1px_0_0_rgba(92,77,60,0.06)] backdrop-blur supports-[backdrop-filter]:bg-background/75">
           <SidebarTrigger />
           <div className="min-w-0">
-            <p className="text-sm font-medium leading-none">Admin</p>
+            <p className="font-googlesansflex text-sm font-semibold uppercase tracking-[0.08em] text-olive">
+              Admin Console
+            </p>
             <p className="mt-1 truncate text-xs text-muted-foreground">
               {session.user.email ?? session.user.name ?? "Signed in"}
             </p>
           </div>
         </header>
-        {children}
+        <div className="min-h-[calc(100dvh-4rem)] bg-[linear-gradient(180deg,oklch(0.985_0.008_84)_0%,oklch(0.95_0.015_80)_100%)]">
+          {children}
+        </div>
       </SidebarInset>
     </SidebarProvider>
   );

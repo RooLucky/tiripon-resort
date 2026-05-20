@@ -49,7 +49,7 @@ export default function FourthPage() {
   };
 
   return (
-    <section className="relative min-h-dvh overflow-hidden bg-cream text-cream">
+    <section className="relative min-h-dvh overflow-hidden text-cream">
       <motion.div
         className="relative min-h-[68dvh] overflow-hidden"
         initial={{ opacity: 0 }}
@@ -169,20 +169,42 @@ export default function FourthPage() {
           viewport={{ once: true, amount: 0.35 }}
           transition={{ duration: 0.75, ease: "easeOut" }}
         >
-          <div
-            className="flex gap-2 text-tan"
-            aria-label={`${activeTestimonial.rating} star rating`}
-          >
-            {Array.from({ length: 5 }).map((_, index) => (
-              <Star
-                key={index}
-                className={`size-6 md:size-7 ${
-                  index < activeTestimonial.rating
-                    ? "fill-current"
-                    : "fill-transparent opacity-60"
-                }`}
-              />
-            ))}
+          <div className="flex items-center justify-between gap-4">
+            <div
+              className="flex gap-2 text-tan"
+              aria-label={`${activeTestimonial.rating} star rating`}
+            >
+              {Array.from({ length: 5 }).map((_, index) => (
+                <Star
+                  key={index}
+                  className={`size-6 md:size-7 ${
+                    index < activeTestimonial.rating
+                      ? "fill-current"
+                      : "fill-transparent opacity-60"
+                  }`}
+                />
+              ))}
+            </div>
+            <div className="flex gap-2 md:hidden">
+              <Button
+                type="button"
+                size="icon"
+                onClick={showPreviousTestimonial}
+                className="size-9 rounded-full bg-cream text-brown hover:bg-stone"
+                aria-label="Previous testimonial"
+              >
+                <ArrowLeft className="size-4" />
+              </Button>
+              <Button
+                type="button"
+                size="icon"
+                onClick={showNextTestimonial}
+                className="size-9 rounded-full bg-tan text-brown hover:bg-khaki"
+                aria-label="Next testimonial"
+              >
+                <ArrowRight className="size-4" />
+              </Button>
+            </div>
           </div>
 
           <AnimatePresence mode="wait">
@@ -216,7 +238,7 @@ export default function FourthPage() {
               </motion.div>
             </AnimatePresence>
 
-            <div className="flex gap-3">
+            <div className="hidden gap-3 md:flex">
               <Button
                 type="button"
                 size="icon"

@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: "Tiripon Resort",
   description:
     "Tiripon Resort is a serene getaway nestled in the heart of nature, offering a perfect blend of tranquility and adventure. With its lush surroundings, comfortable accommodations, and a range of activities, Tiripon Resort is the ideal destination for those seeking relaxation and outdoor fun.",
-  icons: "/logo/web-logo.png",
+  icons: "/logo/web.png",
 };
 
 export default function RootLayout({

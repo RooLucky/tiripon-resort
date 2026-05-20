@@ -14,7 +14,9 @@ export default function PrimaryLayout({
         <Header />
       </div>
       {children}
-      <MapDirectionsSection />
+      <div className="pt-[10dvh] p-4">
+        <MapDirectionsSection />
+      </div>
       <Footer />
       <Toaster position="bottom-right" />
     </section>

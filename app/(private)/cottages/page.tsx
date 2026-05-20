@@ -44,9 +44,9 @@ export default async function CottagePage() {
   }));
 
   return (
-    <main className="flex flex-1 flex-col gap-6 p-4 md:p-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Cottages</h1>
+    <main className="flex flex-1 flex-col gap-6 p-4 md:p-7">
+      <div className="rounded-xl border border-border/80 bg-card/80 p-5 shadow-sm">
+        <h1 className="text-3xl leading-tight text-brown">Cottages</h1>
         <p className="text-sm text-muted-foreground">
           Manage available cottages and create new inventory items.
         </p>

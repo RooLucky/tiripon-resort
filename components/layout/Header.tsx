@@ -229,31 +229,31 @@ export default function Header() {
                   <h1>Menu</h1>
                 </Button>
               </DrawerTrigger>
-              <DrawerContent className="rounded-t-2xl border-brown/20 bg-cream">
+              <DrawerContent className="rounded-t-2xl border-brown/20">
                 <DrawerHeader className="px-5 pt-4 text-left">
-                  <DrawerTitle className="font-googlesansflex text-xl text-brown">
+                  <DrawerTitle className="font-light text-xl text-brown">
                     Quick Actions
                   </DrawerTitle>
                   <DrawerDescription className="font-googlesansflex text-brown/75">
                     Choose where you want to go.
                   </DrawerDescription>
                 </DrawerHeader>
-                <div className="grid gap-3 px-5 pb-6">
+                <div className="grid gap-3 px-5 pb-6 font-light">
                   <a
                     href="/home"
-                    className="rounded-lg border border-brown/20 bg-white px-4 py-3 text-center font-googlesansflex text-base font-semibold text-brown transition-colors hover:bg-sand/40"
+                    className="rounded-lg border border-brown/20 bg-white px-4 py-3 text-center font-googlesansflex text-base text-brown transition-colors hover:bg-sand/40"
                   >
                     Homepage
                   </a>
                   <a
                     href="/reservation"
-                    className="rounded-lg border border-brown/20 bg-accent px-4 py-3 text-center font-googlesansflex text-base font-semibold text-brown transition-colors hover:bg-khaki/40"
+                    className="rounded-lg border border-brown/20 bg-accent px-4 py-3 text-center font-googlesansflex text-base text-brown transition-colors hover:bg-khaki/40"
                   >
                     Make a Reservation
                   </a>
                   <a
                     href="/login"
-                    className="rounded-lg border border-brown/20 bg-brown px-4 py-3 text-center font-googlesansflex text-base font-semibold text-cream transition-colors hover:bg-brown/90"
+                    className="rounded-lg border border-brown/20 bg-brown px-4 py-3 text-center font-googlesansflex text-base text-cream transition-colors hover:bg-brown/90"
                   >
                     Login to Admin
                   </a>

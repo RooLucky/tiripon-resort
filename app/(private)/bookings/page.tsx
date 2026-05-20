@@ -119,9 +119,9 @@ export default async function AdminPage({
   }));
 
   return (
-    <main className="flex flex-1 flex-col gap-6 p-4 md:p-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Bookings</h1>
+    <main className="flex flex-1 flex-col gap-6 p-4 md:p-7">
+      <div className="rounded-xl border border-border/80 bg-card/80 p-5 shadow-sm">
+        <h1 className="text-3xl leading-tight text-brown">Bookings</h1>
         <p className="text-sm text-muted-foreground">
           Manage reservation requests, receipt proof, and connected cottages.
         </p>
@@ -133,7 +133,7 @@ export default async function AdminPage({
         pageSize={selectedSize}
       />
 
-      <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card/70 p-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
         <p>
           Showing {bookings.length === 0 ? 0 : skip + 1}-
           {Math.min(skip + bookings.length, totalBookings)} of {totalBookings}
