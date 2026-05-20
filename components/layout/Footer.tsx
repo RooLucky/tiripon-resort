@@ -32,7 +32,7 @@ const policyContent = {
   refund: {
     title: "Refund Policy",
     description:
-      "Refunds are available for cancellations made at least 2 to 3 days before the scheduled check-in date. Late cancellations and no-shows may be non-refundable depending on booking status.",
+      "Refunds are available for cancellations made at least 1 to 2 days before the scheduled check-in date. Late cancellations and no-shows may be non-refundable depending on booking status.",
   },
   support: {
     title: "Support",
@@ -153,7 +153,7 @@ export default function Footer() {
 
   return (
     <>
-      <footer className="relative w-full overflow-hidden border-t border-brown/20  text-brown">
+      <footer className="relative w-full overflow-hidden text-brown">
         <div className="mx-auto flex w-full md:max-w-[90dvw] max-w-[98dvw] flex-col px-2 pb-8 pt-16 sm:px-8 md:pt-20">
           <motion.div
             {...sectionAnimation}

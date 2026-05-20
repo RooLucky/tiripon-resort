@@ -103,6 +103,8 @@ export default function SecondPage() {
   const [selectedCottageId, setSelectedCottageId] = useState<string | null>(
     null,
   );
+  const [pendingCottageId, setPendingCottageId] = useState<string | null>(null);
+  const [isCottageConfirmOpen, setIsCottageConfirmOpen] = useState(false);
   const [date, setDate] = useState<Date>();
   const [checkInTime, setCheckInTime] = useState("6:00 AM");
   const [children, setChildren] = useState(0);
@@ -298,16 +300,27 @@ export default function SecondPage() {
     setIsBookingModalOpen(true);
   };
 
-  const toggleCottage = (cottageId: string) => {
+  const confirmToggleCottage = (cottageId: string) => {
+    setPendingCottageId(cottageId);
+    setIsCottageConfirmOpen(true);
+  };
+
+  const toggleCottage = () => {
+    if (!pendingCottageId) return;
+    const cottageId = pendingCottageId;
     const cottage = cottages.find((item) => item.id === cottageId);
 
     if (cottage && isCottageFullyBooked(cottage)) {
+      setIsCottageConfirmOpen(false);
+      setPendingCottageId(null);
       return;
     }
 
     setSelectedCottageId((current) =>
       current === cottageId ? null : cottageId,
     );
+    setIsCottageConfirmOpen(false);
+    setPendingCottageId(null);
   };
 
   const handleBookingSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -619,10 +632,7 @@ export default function SecondPage() {
                             key={cottage.id}
                             className="md:basis-1/2"
                           >
-                            <motion.button
-                              type="button"
-                              onClick={() => toggleCottage(cottage.id)}
-                              disabled={isUnavailable}
+                            <motion.article
                               whileHover={isUnavailable ? undefined : { y: -3 }}
                               whileTap={
                                 isUnavailable ? undefined : { scale: 0.985 }
@@ -632,20 +642,20 @@ export default function SecondPage() {
                                 stiffness: 360,
                                 damping: 28,
                               }}
-                              className={`block w-full overflow-hidden border bg-cream text-left transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                              className={`block w-full overflow-hidden border bg-cream text-left transition ${
                                 isUnavailable
-                                  ? "border-brown/10 grayscale"
+                                  ? "cursor-not-allowed border-brown/10 grayscale opacity-60"
                                   : isSelected
                                     ? "border-brown shadow-xl shadow-brown/15"
                                     : "border-brown/15 shadow-sm hover:border-brown/45 hover:shadow-lg hover:shadow-brown/10"
                               }`}
                             >
-                              <div className="relative aspect-[4/3] w-full overflow-hidden">
+                              <div className="relative aspect-square w-full overflow-hidden">
                                 {cottage.imageUrl ? (
                                   <img
                                     src={cottage.imageUrl}
                                     alt={cottage.name}
-                                    className="w-full h-full object-cover object-center"
+                                    className="w-full h-full object-cover object-[center_75%]"
                                   />
                                 ) : (
                                   <Image
@@ -655,8 +665,14 @@ export default function SecondPage() {
                                     className="object-contain"
                                   />
                                 )}
-                                <motion.span
-                                  className="absolute right-3 top-3 flex size-9 items-center justify-center bg-white text-brown shadow"
+                                <motion.button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    confirmToggleCottage(cottage.id);
+                                  }}
+                                  disabled={isUnavailable}
+                                  className="absolute right-3 top-3 z-20 flex size-9 items-center justify-center bg-white text-brown shadow disabled:cursor-not-allowed"
                                   animate={{
                                     scale: isSelected ? 1 : 0.92,
                                     opacity: isUnavailable
@@ -686,11 +702,10 @@ export default function SecondPage() {
                                   ) : (
                                     <span className="size-4 border border-brown/45" />
                                   )}
-                                </motion.span>
+                                </motion.button>
                                 {isUnavailable && (
                                   <span className="absolute inset-x-3 bottom-3 bg-brown px-3 py-2 text-center font-googlesansflex text-xs font-semibold uppercase tracking-wide text-cream shadow">
-                                    Fully booked ({reservedCount}/
-                                    {totalQuantity})
+                                    RESERVED ({reservedCount}/{totalQuantity})
                                   </span>
                                 )}
                               </div>
@@ -715,7 +730,7 @@ export default function SecondPage() {
                                   {totalQuantity}
                                 </p>
                               </div>
-                            </motion.button>
+                            </motion.article>
                           </CarouselItem>
                         );
                       })}
@@ -818,6 +833,42 @@ export default function SecondPage() {
                 </div>
               </div>
             </form>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          open={isCottageConfirmOpen}
+          onOpenChange={(open) => {
+            setIsCottageConfirmOpen(open);
+            if (!open) {
+              setPendingCottageId(null);
+            }
+          }}
+        >
+          <DialogContent className="md:max-w-md max-w-[90dvw] bg-cream text-brown ">
+            <DialogHeader>
+              <DialogTitle className="font-heading text-3xl">
+                Confirm selection
+              </DialogTitle>
+              <DialogDescription className="font-googlesansflex text-brown/70">
+                Do you really want to select this cottage?
+              </DialogDescription>
+            </DialogHeader>
+            <div className="mt-2 flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsCottageConfirmOpen(false);
+                  setPendingCottageId(null);
+                }}
+              >
+                No
+              </Button>
+              <Button type="button" onClick={toggleCottage}>
+                Yes
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
 

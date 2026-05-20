@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
 import { Button } from "../ui/button";
+import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 
 const testimonials = [
   {
@@ -12,26 +13,30 @@ const testimonials = [
       "Our family had a comfortable and memorable day at the resort. The pool was well kept, the cottages gave us space to gather, and the view made the setting feel truly special.",
     guest: "St. John The Baptist Church Family",
     stay: "Family Resort Day",
-    image: "/images/review-2.jpg",
+    image: "/images/review-2.png",
   },
   {
     quote:
       "It was an ideal place for fellowship and bonding. We were able to swim, share meals, and spend quality time together in a relaxed environment.",
     guest: "St. John The Baptist Church Family",
     stay: "Group Bonding",
-    image: "/images/review-1.jpg",
+    image: "/images/review-1.png",
   },
   {
     quote:
       "A refreshing escape from the usual routine. The peaceful atmosphere and scenic setting made the visit feel calm, worthwhile, and easy to recommend.",
     guest: "Guests from Different Places",
     stay: "Great Escape",
-    image: "/images/review-3.jpg",
+    image: "/images/review-3.png",
   },
 ];
 
 export default function FourthPage() {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [previewImage, setPreviewImage] = useState<{
+    src: string;
+    alt: string;
+  } | null>(null);
   const visibleCards = useMemo(
     () =>
       Array.from(
@@ -57,7 +62,7 @@ export default function FourthPage() {
           width={250}
           height={160}
           aria-hidden
-          className="pointer-events-none absolute -left-14 -top-7 z-50 w-40 rotate-[-14deg] opacity-45 blur-[1px] sm:w-52 sm:opacity-45"
+          className="pointer-events-none absolute -left-14 -top-7 z-10 w-40 rotate-[-14deg] opacity-45 blur-[1px] sm:w-52 sm:opacity-45"
         />
         <Image
           src="/images/leaf.png"
@@ -65,7 +70,7 @@ export default function FourthPage() {
           width={260}
           height={170}
           aria-hidden
-          className="pointer-events-none absolute -right-16 -top-2 z-10 w-44 rotate-[14deg] opacity-35 blur-[0.4px] sm:w-56 sm:opacity-65"
+          className="pointer-events-none absolute -right-16 -top-2 z-10 w-44 rotate-[240deg] opacity-35 blur-[0.4px] sm:w-56 sm:opacity-65"
         />
         <Image
           src="/images/leaf.png"
@@ -73,7 +78,7 @@ export default function FourthPage() {
           width={190}
           height={124}
           aria-hidden
-          className="pointer-events-none absolute left-[34%] top-[49%] z-50 hidden rotate-[9deg] opacity-65 blur-[0.8px] md:block"
+          className="pointer-events-none absolute left-[34%] top-[49%] z-50 hidden rotate-[9deg] opacity-25 blur-[0.8px] md:block"
         />
         <Image
           src="/images/leaf.png"
@@ -122,13 +127,22 @@ export default function FourthPage() {
             >
               <div className="absolute -top-10 left-1/2 -translate-x-1/2 sm:-top-14">
                 <div className="rounded-full border-2 border-khaki bg-cream/20 p-1">
-                  <Image
-                    src={item.image}
-                    alt={item.guest}
-                    width={120}
-                    height={120}
-                    className="size-20 rounded-full object-cover sm:size-28"
-                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPreviewImage({ src: item.image, alt: item.guest })
+                    }
+                    className="block rounded-full"
+                    aria-label={`View ${item.guest} image`}
+                  >
+                    <Image
+                      src={item.image}
+                      alt={item.guest}
+                      width={120}
+                      height={120}
+                      className="size-20 rounded-full object-cover sm:size-28"
+                    />
+                  </button>
                 </div>
               </div>
 
@@ -145,7 +159,7 @@ export default function FourthPage() {
           ))}
         </div>
 
-        <div className="relative z-50 mt-8 flex items-center justify-center gap-4 sm:mt-10 sm:gap-6">
+        <div className="relative z-50 mt-8 md:hidden flex items-center justify-center gap-4 sm:mt-10 sm:gap-6">
           <Button
             type="button"
             size="icon"
@@ -168,6 +182,28 @@ export default function FourthPage() {
           </Button>
         </div>
       </div>
+
+      <Dialog
+        open={Boolean(previewImage)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPreviewImage(null);
+          }
+        }}
+      >
+        <DialogContent className="h-fit w-[90dvw] max-w-[90dvw] overflow-auto p-0 rounded-none md:max-w-3xl">
+          <DialogTitle className="sr-only">
+            Testimonial image preview
+          </DialogTitle>
+          {previewImage ? (
+            <img
+              src={previewImage.src}
+              alt={previewImage.alt}
+              className="h-fit w-full max-w-none"
+            />
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

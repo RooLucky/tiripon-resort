@@ -11,25 +11,29 @@ const resortSlides = [
     name: "Quiet Place",
     description: "A calm corner for slow mornings and restful afternoons.",
     image: "/images/2.png",
-    price: "₱1,200 / DAY USE",
+    highlight:
+      "Ideal for quiet family catch-ups and relaxed poolside conversations.",
   },
   {
     name: "Golden Hours",
     description: "Soft afternoon light and relaxed open-air comfort.",
     image: "/images/3.png",
-    price: "₱1,500 / DAY USE",
+    highlight:
+      "Perfect for sunset photos, birthdays, and meaningful shared moments.",
   },
   {
     name: "Breathe and Gather",
     description: "Wide airy spaces made for shared moments.",
     image: "/images/4.png",
-    price: "₱1,800 / DAY USE",
+    highlight:
+      "A welcoming space for barkada bonding, reunions, and team outings.",
   },
   {
     name: "Private Retreat",
     description: "Peaceful privacy surrounded by greenery.",
     image: "/images/5.png",
-    price: "₱2,000 / DAY USE",
+    highlight:
+      "Great for intimate celebrations and calm breaks away from city noise.",
   },
 ];
 
@@ -50,7 +54,7 @@ export default function ThirdPage() {
     return Array.from(
       { length: Math.min(CARDS_VISIBLE_DESKTOP, total) },
       (_, idx) => {
-      return resortSlides[(startIndex + idx) % total];
+        return resortSlides[(startIndex + idx) % total];
       },
     );
   }, [startIndex, total]);
@@ -84,7 +88,7 @@ export default function ThirdPage() {
   }, [mobileTransition]);
 
   return (
-    <section className="relative overflow-hidden bg-cream px-4 py-16 text-brown md:px-[5dvw] md:py-24">
+    <section className="relative overflow-hidden bg-cream/20 px-4 py-16 text-brown md:px-[5dvw] md:py-24">
       <div className="pointer-events-none absolute inset-0 opacity-30">
         <div className="mx-auto grid h-full max-w-[92rem] grid-cols-4 border-x border-brown/10 md:grid-cols-8">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -105,7 +109,9 @@ export default function ThirdPage() {
             Accomodation & Comfort
           </p>
           <div className="mx-auto mt-2 h-px w-24 bg-tan" />
-          <h2 className="mt-5 font-heading text-5xl md:text-7xl">Rooms & Suites</h2>
+          <h2 className="mt-5 font-heading text-5xl md:text-7xl">
+            Rooms & Suites
+          </h2>
         </div>
 
         <div className="mt-10 overflow-hidden md:hidden">
@@ -119,27 +125,27 @@ export default function ThirdPage() {
             {mobileSlides.map((slide, idx) => (
               <article
                 key={`mobile-${slide.name}-${slide.image}-${idx}`}
-                className="group relative w-full shrink-0 overflow-hidden rounded-2xl border border-brown/15 bg-stone/25"
+                className="group relative w-full shrink-0 overflow-hidden rounded-xl border border-brown/15 bg-stone/25"
               >
                 <div className="relative aspect-[3/4]">
-                  <Image
+                  <img
                     src={slide.image}
                     alt={slide.name}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    sizes="92vw"
+                    className="object-cover object-[center_100%] transition-transform duration-500 group-hover:scale-105"
                   />
                 </div>
-                <div className="absolute inset-x-0 bottom-0 bg-till/95 p-5 text-cream">
-                  <h3 className="font-heading text-4xl leading-none">{slide.name}</h3>
+                <div className="absolute inset-x-0 min-h-56 max-h-56 bottom-0 bg-till p-5 text-cream">
+                  <h3 className="font-heading text-4xl leading-none">
+                    {slide.name}
+                  </h3>
                   <p className="mt-4 font-googlesansflex text-xs uppercase tracking-[0.12em] text-cream/70">
                     Stay from
                   </p>
-                  <p className="mt-1 font-googlesansflex text-lg font-semibold text-khaki">
-                    {slide.price}
-                  </p>
                   <p className="mt-2 font-googlesansflex text-sm text-cream/80">
                     {slide.description}
+                  </p>
+                  <p className="mt-2 font-googlesansflex text-sm text-khaki">
+                    {slide.highlight}
                   </p>
                 </div>
               </article>
@@ -147,38 +153,38 @@ export default function ThirdPage() {
           </div>
         </div>
 
-        <div className="mt-10 hidden gap-4 md:grid md:grid-cols-4">
+        <div className="mt-10 hidden gap-4 space-x-4 md:grid md:grid-cols-4 sm:grid-cols-2">
           {visibleSlides.map((slide) => (
             <article
               key={`${slide.name}-${slide.image}`}
               className="group relative overflow-hidden rounded-2xl border border-brown/15 bg-stone/25"
             >
               <div className="relative aspect-[3/4]">
-                <Image
+                <img
                   src={slide.image}
                   alt={slide.name}
-                  fill
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  sizes="(min-width: 768px) 22vw, 88vw"
                 />
               </div>
-              <div className="absolute inset-x-0 bottom-0 bg-till/95 p-5 text-cream">
-                <h3 className="font-heading text-4xl leading-none">{slide.name}</h3>
+              <div className="absolute inset-x-0 min-h-56 max-h-56 bottom-0 bg-till p-5 text-cream">
+                <h3 className="font-heading text-4xl leading-none">
+                  {slide.name}
+                </h3>
                 <p className="mt-4 font-googlesansflex text-xs uppercase tracking-[0.12em] text-cream/70">
                   Stay from
                 </p>
-                <p className="mt-1 font-googlesansflex text-lg font-semibold text-khaki">
-                  {slide.price}
-                </p>
                 <p className="mt-2 font-googlesansflex text-sm text-cream/80">
                   {slide.description}
+                </p>
+                <p className="mt-2 font-googlesansflex text-sm text-khaki">
+                  {slide.highlight}
                 </p>
               </div>
             </article>
           ))}
         </div>
 
-        <div className="mt-8 flex items-center justify-center gap-6">
+        <div className="mt-8 md:hidden flex items-center justify-center gap-6">
           <Button
             type="button"
             size="icon"
