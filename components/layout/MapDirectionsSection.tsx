@@ -122,7 +122,7 @@ export default function MapDirectionsSection() {
                   </p>
                   <div className="overflow-hidden rounded-lg border border-brown/15">
                     <Image
-                      src="/images/4-wheels.png"
+                      src="/images/4wheels.png"
                       alt="Best route map for 4-wheel vehicles"
                       width={1200}
                       height={800}

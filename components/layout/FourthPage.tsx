@@ -57,7 +57,7 @@ export default function FourthPage() {
           width={250}
           height={160}
           aria-hidden
-          className="pointer-events-none absolute -left-14 -top-7 z-10 w-40 rotate-[-14deg] opacity-25 blur-[1px] sm:w-52 sm:opacity-45"
+          className="pointer-events-none absolute -left-14 -top-7 z-50 w-40 rotate-[-14deg] opacity-45 blur-[1px] sm:w-52 sm:opacity-45"
         />
         <Image
           src="/images/leaf.png"
@@ -73,7 +73,7 @@ export default function FourthPage() {
           width={190}
           height={124}
           aria-hidden
-          className="pointer-events-none absolute left-[34%] top-[39%] z-10 hidden rotate-[9deg] opacity-65 blur-[0.8px] md:block"
+          className="pointer-events-none absolute left-[34%] top-[49%] z-50 hidden rotate-[9deg] opacity-65 blur-[0.8px] md:block"
         />
         <Image
           src="/images/leaf.png"
@@ -89,7 +89,7 @@ export default function FourthPage() {
           width={260}
           height={170}
           aria-hidden
-          className="pointer-events-none absolute -bottom-14 right-[-7%] z-10 w-44 rotate-[-28deg] opacity-28 blur-[1px] sm:right-[11%] sm:w-56 sm:opacity-38"
+          className="pointer-events-none absolute -bottom-14 right-[-7%] z-10 w-44 rotate-[-28deg] opacity-45 blur-[1px] sm:right-[11%] sm:w-56 sm:opacity-38"
         />
         <motion.div
           initial={{ opacity: 0, y: 18 }}
