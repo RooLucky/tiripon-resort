@@ -14,7 +14,7 @@ export default function PrimaryLayout({
         <Header />
       </div>
       {children}
-      <div className="pt-[10dvh]">
+      <div className="md:pt-[10dvh] pt-[5dvh]">
         <MapDirectionsSection />
       </div>
       <Footer />

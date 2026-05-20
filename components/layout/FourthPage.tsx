@@ -152,7 +152,7 @@ export default function FourthPage() {
         </motion.div>
       </motion.div>
 
-      <div className="relative min-h-[32dvh] px-[5dvw] pb-16">
+      <div className="relative min-h-[32dvh] md:px-[5dvw] md:pb-16">
         <div className="pointer-events-none absolute inset-x-[5dvw] inset-y-0 grid grid-cols-4 border-x border-cream/15 md:grid-cols-8">
           {Array.from({ length: 8 }).map((_, index) => (
             <div

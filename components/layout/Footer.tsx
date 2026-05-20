@@ -154,7 +154,7 @@ export default function Footer() {
   return (
     <>
       <footer className="relative w-full overflow-hidden border-t border-brown/20  text-brown">
-        <div className="mx-auto flex w-full md:max-w-[90dvw] max-w-[98dvw] flex-col px-5 pb-8 pt-16 sm:px-8 md:pt-20">
+        <div className="mx-auto flex w-full md:max-w-[90dvw] max-w-[98dvw] flex-col px-2 pb-8 pt-16 sm:px-8 md:pt-20">
           <motion.div
             {...sectionAnimation}
             className="mb-10 flex items-center justify-center gap-4 md:mb-14"
