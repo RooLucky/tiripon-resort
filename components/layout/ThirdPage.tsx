@@ -77,7 +77,7 @@ export default function ThirdPage() {
   const activeSlide = resortSlides[activeIndex] ?? resortSlides[0];
 
   return (
-    <section className="min-h-dvh w-full px-4 py-10 sm:px-5 md:px-[5dvw] md:py-20">
+    <section className="min-h-dvh w-full px-2 py-10 sm:px-5 md:px-[5dvw] md:py-20">
       <motion.div
         className="mx-auto grid w-full max-w-[92rem] gap-10 md:grid-cols-[0.9fr_1.9fr]"
         initial="hidden"

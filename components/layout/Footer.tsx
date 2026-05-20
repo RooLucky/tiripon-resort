@@ -145,13 +145,15 @@ export default function Footer() {
     }
   };
 
-  const linkUrl = (url = "https://www.facebook.com/profile.php?id=61589851403999") => {
+  const linkUrl = (
+    url = "https://www.facebook.com/profile.php?id=61589851403999",
+  ) => {
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
   return (
     <>
-      <footer className="relative w-full overflow-hidden border-t border-brown/20 bg-gradient-to-b from-cream via-cream to-amber-50/70 text-brown">
+      <footer className="relative w-full overflow-hidden border-t border-brown/20  text-brown">
         <div className="mx-auto flex w-full md:max-w-[90dvw] max-w-[98dvw] flex-col px-5 pb-8 pt-16 sm:px-8 md:pt-20">
           <motion.div
             {...sectionAnimation}
