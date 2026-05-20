@@ -17,15 +17,15 @@ import { MapPin, Navigation, Clock3 } from "lucide-react";
 
 export default function MapDirectionsSection() {
   return (
-    <section className="mx-auto w-full md:max-w-[90dvw] max-w-[98dvw] bg-transparent pb-10 pt-4 sm:px-8 md:pb-16">
-      <Card className="overflow-hidden border-brown/20 bg-cream/30 shadow-sm backdrop-blur-sm">
+    <section className="mx-auto w-full md:max-w-[90dvw] max-w-[98dvw] bg-transparent sm:px-8 md:pb-16">
+      <Card className="overflow-hidden border-brown/20 bg-cream/30 shadow-sm backdrop-blur-sm py-0 rounded-none md:rounded-lg">
         <div className="grid grid-cols-1 lg:grid-cols-2">
-          <CardContent className="px-4">
-            <div className="h-full min-h-[320px] w-full rounded-lg">
+          <CardContent className="p-0">
+            <div className="h-full min-h-[320px] w-full ">
               <iframe
                 title="Tiripon Resort Map"
                 src="https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3897.451553329892!2d123.66565824504222!3d13.332453985177361!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMTPCsDE5JzU2LjgiTiAxMjPCsDQwJzAxLjciRQ!5e1!3m2!1sen!2sph!4v1778757888174!5m2!1sen!2sph"
-                className="h-full min-h-[420px] rounded-lg w-full border-0"
+                className="h-full min-h-[420px] w-full border-0"
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
                 allowFullScreen

@@ -18,11 +18,10 @@ import type { CottageOption } from "@/lib/booking-types";
 import { DatePicker } from "./DatePicker";
 import { Button } from "../ui/button";
 import {
+  type CarouselApi,
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
 } from "../ui/carousel";
 import {
   Dialog,
@@ -99,6 +98,7 @@ export default function SecondPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [cottageCarouselApi, setCottageCarouselApi] = useState<CarouselApi>();
   const [cottages, setCottages] = useState<CottageOption[]>([]);
   const [selectedCottageId, setSelectedCottageId] = useState<string | null>(
     null,
@@ -602,6 +602,7 @@ export default function SecondPage() {
                   </DialogHeader>
 
                   <Carousel
+                    setApi={setCottageCarouselApi}
                     opts={{ align: "start", loop: true }}
                     className="mt-6"
                   >
@@ -721,24 +722,26 @@ export default function SecondPage() {
                         );
                       })}
                     </CarouselContent>
-                    <CarouselPrevious
+                    <Button
                       type="button"
                       size="icon-lg"
                       variant="outline"
                       aria-label="Previous cottage"
+                      onClick={() => cottageCarouselApi?.scrollPrev()}
                       className="absolute left-3 top-1/2 z-40 flex -translate-y-1/2 rounded-full bg-white/95 text-brown shadow-lg shadow-brown/15"
                     >
                       <ChevronLeft />
-                    </CarouselPrevious>
-                    <CarouselNext
+                    </Button>
+                    <Button
                       type="button"
                       size="icon-lg"
                       variant="outline"
                       aria-label="Next cottage"
+                      onClick={() => cottageCarouselApi?.scrollNext()}
                       className="absolute right-3 top-1/2 z-40 flex -translate-y-1/2 rounded-full bg-white/95 text-brown shadow-lg shadow-brown/15"
                     >
                       <ChevronRight />
-                    </CarouselNext>
+                    </Button>
                   </Carousel>
                 </div>
 
