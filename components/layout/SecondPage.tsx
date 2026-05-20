@@ -147,6 +147,19 @@ export default function SecondPage() {
     [reservedByCottageId],
   );
 
+  const refreshCottages = useCallback(async () => {
+    try {
+      const response = await fetch("/api/cottages", { cache: "no-store" });
+      if (!response.ok) return;
+      const data = (await response.json()) as { cottages?: CottageOption[] };
+      if (Array.isArray(data.cottages)) {
+        setCottages(data.cottages);
+      }
+    } catch {
+      // Keep existing cottages if refresh fails.
+    }
+  }, []);
+
   const refreshAvailability = useCallback(
     async (dateKey: string, showLoading = false) => {
       if (showLoading) {
@@ -211,15 +224,30 @@ export default function SecondPage() {
   }, [refreshAvailability, selectedDateKey]);
 
   useEffect(() => {
-    void fetch("/api/cottages", { cache: "no-store" })
-      .then((response) => (response.ok ? response.json() : null))
-      .then((data: { cottages?: CottageOption[] } | null) => {
-        if (Array.isArray(data?.cottages)) {
-          setCottages(data.cottages);
-        }
-      })
-      .catch(() => null);
-  }, []);
+    void refreshCottages();
+  }, [refreshCottages]);
+
+  useEffect(() => {
+    const refreshCottagesRealtime = () => {
+      void refreshCottages();
+      if (selectedDateKey) {
+        void refreshAvailability(selectedDateKey);
+      }
+    };
+
+    const cottagesChannel = supabase
+      .channel("public-cottages-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "cottages" },
+        refreshCottagesRealtime,
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(cottagesChannel);
+    };
+  }, [refreshAvailability, refreshCottages, selectedDateKey, supabase]);
 
   useEffect(() => {
     if (!selectedDateKey) return;
