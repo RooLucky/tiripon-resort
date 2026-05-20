@@ -56,11 +56,6 @@ export default async function AdminPage({
       skip,
       take: selectedSize,
       include: {
-        cottage: {
-          orderBy: {
-            createdAt: "asc",
-          },
-        },
         receipt: true,
       },
     }),
@@ -70,6 +65,13 @@ export default async function AdminPage({
       },
     }),
   ]);
+  const cottageIds = bookings
+    .map((booking) => booking.selected_cottage_id)
+    .filter((id): id is string => Boolean(id));
+  const cottages = await prisma.cottages.findMany({
+    where: { id: { in: cottageIds } },
+  });
+  const cottageById = new Map(cottages.map((cottage) => [cottage.id, cottage]));
 
   const pageCount = Math.max(Math.ceil(totalBookings / selectedSize), 1);
   const rows = bookings.map((booking) => ({
@@ -85,12 +87,21 @@ export default async function AdminPage({
     checkOut: formatDate(booking.checkOut),
     createdAt: formatDate(booking.createdAt),
     createdAtIso: booking.createdAt.toISOString(),
-    cottages: booking.cottage.map((cottage) => ({
-      id: cottage.id,
-      name: cottage.name,
-      description: cottage.description,
-      price: formatCurrency(cottage.price),
-    })),
+    cottages:
+      booking.selected_cottage_id &&
+      cottageById.has(booking.selected_cottage_id)
+        ? [
+            (() => {
+              const cottage = cottageById.get(booking.selected_cottage_id)!;
+              return {
+                id: cottage.id,
+                name: cottage.name,
+                description: cottage.description,
+                price: formatCurrency(cottage.price),
+              };
+            })(),
+          ]
+        : [],
     receipt: booking.receipt
       ? {
           id: booking.receipt.id,

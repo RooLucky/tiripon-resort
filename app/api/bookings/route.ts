@@ -47,7 +47,10 @@ function getBookingDayRange(dateKey: string, timezoneOffset = 0) {
   return { start, end };
 }
 
-async function getPaidCottageNamesForDay(dateKey: string, timezoneOffset = 0) {
+async function getPaidCottageReservationCountsForDay(
+  dateKey: string,
+  timezoneOffset = 0,
+) {
   const range = getBookingDayRange(dateKey, timezoneOffset);
 
   if (!range) {
@@ -69,20 +72,14 @@ async function getPaidCottageNamesForDay(dateKey: string, timezoneOffset = 0) {
         },
       },
     },
-    select: {
-      cottage: {
-        select: {
-          name: true,
-        },
-      },
-    },
+    select: { selected_cottage_id: true },
   });
-
-  return new Set(
-    bookings.flatMap((booking) =>
-      booking.cottage.map((cottage) => cottage.name),
-    ),
-  );
+  const selectedIds = bookings
+    .map((booking) => booking.selected_cottage_id)
+    .filter((id): id is string => Boolean(id));
+  const counts: Record<string, number> = {};
+  for (const id of selectedIds) counts[id] = (counts[id] ?? 0) + 1;
+  return counts;
 }
 
 function isBookingPayload(value: unknown): value is BookingRequestPayload {
@@ -97,19 +94,8 @@ function isBookingPayload(value: unknown): value is BookingRequestPayload {
     payload.email.trim().length > 0 &&
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email) &&
     (payload.phone === undefined || typeof payload.phone === "string") &&
-    Array.isArray(payload.cottage) &&
-    payload.cottage.length > 0 &&
-    payload.cottage.every(
-      (cottage) =>
-        cottage &&
-        typeof cottage === "object" &&
-        typeof cottage.name === "string" &&
-        cottage.name.trim().length > 0 &&
-        typeof cottage.description === "string" &&
-        typeof cottage.price === "number" &&
-        Number.isFinite(cottage.price) &&
-        cottage.price >= 0,
-    ) &&
+    typeof payload.selected_cottage_id === "string" &&
+    payload.selected_cottage_id.trim().length > 0 &&
     typeof payload.number_of_kids === "string" &&
     /^\d+$/.test(payload.number_of_kids) &&
     typeof payload.number_of_adult === "string" &&
@@ -142,10 +128,13 @@ export async function POST(request: Request) {
   const numberOfKids = Number(body.number_of_kids);
   const numberOfAdults = Number(body.number_of_adult);
   const expectedEntranceTotal = numberOfKids * 30 + numberOfAdults * 50;
-  const cottageTotal = body.cottage.reduce(
-    (sum, cottage) => sum + cottage.price,
-    0,
-  );
+  const selectedCottage = await prisma.cottages.findUnique({
+    where: { id: body.selected_cottage_id },
+  });
+  if (!selectedCottage) {
+    return Response.json({ error: "Selected cottage not found." }, { status: 400 });
+  }
+  const cottageTotal = selectedCottage.price;
 
   if (body.total_price !== expectedEntranceTotal + cottageTotal) {
     return Response.json(
@@ -176,18 +165,14 @@ export async function POST(request: Request) {
         : checkIn.toISOString().slice(0, 10);
     const timezoneOffset =
       typeof body.timezoneOffset === "number" ? body.timezoneOffset : 0;
-    const paidCottageNames = await getPaidCottageNamesForDay(
+    const reservedByCottageId = await getPaidCottageReservationCountsForDay(
       dateKey,
       timezoneOffset,
     );
-    const unavailableCottage = body.cottage.find((cottage) =>
-      paidCottageNames.has(cottage.name),
-    );
-
-    if (unavailableCottage) {
+    if ((reservedByCottageId[selectedCottage.id] ?? 0) >= (selectedCottage.quantity ?? 1)) {
       return Response.json(
         {
-          error: `${unavailableCottage.name} is already taken for ${formatMonthDay(checkIn)}.`,
+          error: `${selectedCottage.name} is already taken for ${formatMonthDay(checkIn)}.`,
         },
         { status: 409 },
       );
@@ -203,19 +188,10 @@ export async function POST(request: Request) {
       number_of_adult: body.number_of_adult,
       number_of_kids: body.number_of_kids,
       total_price: body.total_price,
+      selected_cottage_id: body.selected_cottage_id,
       summary: body.summary?.trim() || null,
       checkIn,
       checkOut,
-      cottage: {
-        create: body.cottage.map((cottage) => ({
-          name: cottage.name,
-          description: cottage.description,
-          price: cottage.price,
-        })),
-      },
-    },
-    include: {
-      cottage: true,
     },
   });
 
@@ -272,14 +248,14 @@ export async function GET(request: Request) {
       return Response.json({ error: "Invalid availability date." }, { status: 400 });
     }
 
-    const unavailableCottageNames = await getPaidCottageNamesForDay(
+    const reservedByCottageId = await getPaidCottageReservationCountsForDay(
       availabilityDate,
       offsetMinutes,
     );
 
     return Response.json(
       {
-        unavailableCottageNames: Array.from(unavailableCottageNames),
+        reservedByCottageId,
       },
       {
         headers: {
@@ -305,14 +281,17 @@ export async function GET(request: Request) {
     skip,
     take: size,
     include: {
-      cottage: {
-        orderBy: {
-          createdAt: "asc",
-        },
-      },
       receipt: true,
     },
   });
+
+  const cottageIds = bookings
+    .map((booking) => booking.selected_cottage_id)
+    .filter((id): id is string => Boolean(id));
+  const cottages = await prisma.cottages.findMany({
+    where: { id: { in: cottageIds } },
+  });
+  const cottageById = new Map(cottages.map((cottage) => [cottage.id, cottage]));
 
   const rows = bookings.map((booking) => ({
     id: booking.id,
@@ -327,12 +306,17 @@ export async function GET(request: Request) {
     checkOut: formatDate(booking.checkOut),
     createdAt: formatDate(booking.createdAt),
     createdAtIso: booking.createdAt.toISOString(),
-    cottages: booking.cottage.map((cottage) => ({
-      id: cottage.id,
-      name: cottage.name,
-      description: cottage.description,
-      price: formatCurrency(cottage.price),
-    })),
+    cottages: booking.selected_cottage_id && cottageById.has(booking.selected_cottage_id)
+      ? [(() => {
+          const cottage = cottageById.get(booking.selected_cottage_id)!;
+          return {
+            id: cottage.id,
+            name: cottage.name,
+            description: cottage.description,
+            price: formatCurrency(cottage.price),
+          };
+        })()]
+      : [],
     receipt: booking.receipt
       ? {
         id: booking.receipt.id,

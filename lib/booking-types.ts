@@ -1,14 +1,18 @@
-export type SelectedCottage = {
+export type CottageOption = {
+  id: string;
   name: string;
   description: string;
   price: number;
+  capacity: string;
+  imageUrl: string | null;
+  quantity: number | null;
 };
 
 export type BookingRequestPayload = {
   name: string;
   email: string;
   phone?: string;
-  cottage: SelectedCottage[];
+  selected_cottage_id: string;
   number_of_adult: string;
   number_of_kids: string;
   total_price: number;

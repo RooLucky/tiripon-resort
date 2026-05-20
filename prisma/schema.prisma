@@ -41,21 +41,21 @@ model ContactUs {
 }
 
 model Booking {
-  id              String     @id @default(uuid())
-  name            String
-  email           String?
-  phone           String?
-  cottage         Cottages[]
-  receipt         Receipt?
-  number_of_adult String
-  number_of_kids  String
-  total_price     Float
-  deleted         Boolean?   @default(false)
-  deletedAt       DateTime?
-  summary         String?
-  checkIn         DateTime?
-  checkOut        DateTime?
-  createdAt       DateTime   @default(now())
+  id                  String    @id @default(uuid())
+  name                String
+  email               String?
+  phone               String?
+  selected_cottage_id String?
+  receipt             Receipt?
+  number_of_adult     String
+  number_of_kids      String
+  total_price         Float
+  deleted             Boolean?  @default(false)
+  deletedAt           DateTime?
+  summary             String?
+  checkIn             DateTime?
+  checkOut            DateTime?
+  createdAt           DateTime  @default(now())
 
   @@map("bookings")
 }
@@ -84,9 +84,10 @@ model Cottages {
   name        String
   description String
   price       Float
+  capacity    String
   createdAt   DateTime @default(now())
-  booking     Booking? @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  bookingId   String?
+  imageUrl    String?
+  quantity    Int?     @default(1)
 
   @@map("cottages")
 }

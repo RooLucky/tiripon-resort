@@ -3,11 +3,18 @@
 import Image from "next/image";
 import { Check, ChevronLeft, ChevronRight, Minus, Plus } from "lucide-react";
 import { motion } from "framer-motion";
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { toast } from "sonner";
 import { useBookingRequest } from "@/hooks/use-booking-request";
 import { getSupabaseBrowserClient } from "@/lib/supabase-client";
-import type { SelectedCottage } from "@/lib/booking-types";
+import type { CottageOption } from "@/lib/booking-types";
 import { DatePicker } from "./DatePicker";
 import { Button } from "../ui/button";
 import {
@@ -46,45 +53,6 @@ const checkInTimes = [
   "11:00 AM",
   "11:30 AM",
   "12:00 PM",
-];
-
-const cottages = [
-  {
-    id: "poolside-cabana-a",
-    name: "Classic Cabana",
-    description:
-      "A straightforward day-use cabana setup with open-air comfort for quick family breaks.",
-    image: "",
-    price: 500,
-    capacity: "10-12 pax",
-  },
-  {
-    id: "poolside-cabana-b",
-    name: "Poolside Cabana",
-    description:
-      "Steps from the water with shaded seating, ideal for guests who want easy pool access all day.",
-    image: "/images/cabana-1.png",
-    price: 400,
-    capacity: "10-12 pax",
-  },
-  {
-    id: "garden-cabana",
-    name: "Garden Cabana",
-    description:
-      "Set beside lush greenery with a quieter atmosphere, designed for laid-back gatherings and privacy.",
-    image: "/images/cabana-2.png",
-    price: 400,
-    capacity: "6-8 guests",
-  },
-  {
-    id: "family-cabana",
-    name: "Family Cabana",
-    description:
-      "A wider cabana layout with extra seating space, suited for bigger groups and all-day stays.",
-    image: "/images/cabana-3.png",
-    price: 300,
-    capacity: "8-12 guests",
-  },
 ];
 
 function GuestStepper({
@@ -131,17 +99,21 @@ export default function SecondPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-  const [selectedCottageIds, setSelectedCottageIds] = useState<string[]>([]);
+  const [cottages, setCottages] = useState<CottageOption[]>([]);
+  const [selectedCottageId, setSelectedCottageId] = useState<string | null>(
+    null,
+  );
   const [date, setDate] = useState<Date>();
   const [checkInTime, setCheckInTime] = useState("6:00 AM");
   const [children, setChildren] = useState(0);
   const [olderGuests, setOlderGuests] = useState(0);
   const [formError, setFormError] = useState<string | null>(null);
-  const [unavailableCottageNames, setUnavailableCottageNames] = useState<
-    string[]
-  >([]);
+  const [reservedByCottageId, setReservedByCottageId] = useState<
+    Record<string, number>
+  >({});
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  const cottagesRef = useRef<CottageOption[]>([]);
 
   const selectedDateKey = useMemo(() => {
     if (!date) return null;
@@ -158,20 +130,21 @@ export default function SecondPage() {
     [children, olderGuests],
   );
 
-  const selectedCottages = useMemo(
-    () => cottages.filter((cottage) => selectedCottageIds.includes(cottage.id)),
-    [selectedCottageIds],
+  const selectedCottage = useMemo(
+    () => cottages.find((cottage) => cottage.id === selectedCottageId) ?? null,
+    [cottages, selectedCottageId],
   );
 
   const cottageTotal = useMemo(
-    () => selectedCottages.reduce((sum, cottage) => sum + cottage.price, 0),
-    [selectedCottages],
+    () => (selectedCottage ? selectedCottage.price : 0),
+    [selectedCottage],
   );
 
   const bookingTotal = total + cottageTotal;
-  const unavailableCottageNameSet = useMemo(
-    () => new Set(unavailableCottageNames),
-    [unavailableCottageNames],
+  const isCottageFullyBooked = useCallback(
+    (cottage: CottageOption) =>
+      (reservedByCottageId[cottage.id] ?? 0) >= (cottage.quantity ?? 1),
+    [reservedByCottageId],
   );
 
   const refreshAvailability = useCallback(
@@ -192,22 +165,29 @@ export default function SecondPage() {
         const contentType = response.headers.get("content-type") ?? "";
         const data =
           response.ok && contentType.includes("application/json")
-            ? ((await response.json()) as { unavailableCottageNames?: string[] })
+            ? ((await response.json()) as {
+                reservedByCottageId?: Record<string, number>;
+              })
             : null;
-        const unavailableNames = Array.isArray(data?.unavailableCottageNames)
-          ? data.unavailableCottageNames
-          : [];
+        const reservedCounts =
+          data?.reservedByCottageId &&
+          typeof data.reservedByCottageId === "object"
+            ? data.reservedByCottageId
+            : {};
 
-        setUnavailableCottageNames(unavailableNames);
-        setSelectedCottageIds((current) =>
-          current.filter((id) => {
-            const cottage = cottages.find((item) => item.id === id);
-
-            return cottage ? !unavailableNames.includes(cottage.name) : false;
-          }),
-        );
+        setReservedByCottageId(reservedCounts);
+        setSelectedCottageId((current) => {
+          if (!current) return null;
+          const cottage = cottagesRef.current.find(
+            (item) => item.id === current,
+          );
+          if (!cottage) return null;
+          const isFullyBooked =
+            (reservedCounts[cottage.id] ?? 0) >= (cottage.quantity ?? 1);
+          return isFullyBooked ? null : current;
+        });
       } catch {
-        setUnavailableCottageNames([]);
+        setReservedByCottageId({});
       } finally {
         if (showLoading) {
           setIsCheckingAvailability(false);
@@ -218,13 +198,28 @@ export default function SecondPage() {
   );
 
   useEffect(() => {
+    cottagesRef.current = cottages;
+  }, [cottages]);
+
+  useEffect(() => {
     if (!selectedDateKey) {
-      setUnavailableCottageNames([]);
+      setReservedByCottageId({});
       return;
     }
 
     void refreshAvailability(selectedDateKey, true);
   }, [refreshAvailability, selectedDateKey]);
+
+  useEffect(() => {
+    void fetch("/api/cottages", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: { cottages?: CottageOption[] } | null) => {
+        if (Array.isArray(data?.cottages)) {
+          setCottages(data.cottages);
+        }
+      })
+      .catch(() => null);
+  }, []);
 
   useEffect(() => {
     if (!selectedDateKey) return;
@@ -278,14 +273,12 @@ export default function SecondPage() {
   const toggleCottage = (cottageId: string) => {
     const cottage = cottages.find((item) => item.id === cottageId);
 
-    if (cottage && unavailableCottageNameSet.has(cottage.name)) {
+    if (cottage && isCottageFullyBooked(cottage)) {
       return;
     }
 
-    setSelectedCottageIds((current) =>
-      current.includes(cottageId)
-        ? current.filter((id) => id !== cottageId)
-        : [...current, cottageId],
+    setSelectedCottageId((current) =>
+      current === cottageId ? null : cottageId,
     );
   };
 
@@ -298,18 +291,14 @@ export default function SecondPage() {
       return;
     }
 
-    if (selectedCottages.length < 1) {
+    if (!selectedCottage) {
       setFormError("Please select at least one cottage.");
       return;
     }
 
-    const unavailableSelectedCottage = selectedCottages.find((cottage) =>
-      unavailableCottageNameSet.has(cottage.name),
-    );
-
-    if (unavailableSelectedCottage) {
+    if (isCottageFullyBooked(selectedCottage)) {
       setFormError(
-        `${unavailableSelectedCottage.name} is already reserved for this date.`,
+        `${selectedCottage.name} is already reserved for this date.`,
       );
       return;
     }
@@ -342,15 +331,11 @@ export default function SecondPage() {
         name,
         email,
         phone,
-        cottage: selectedCottages.map<SelectedCottage>((cottage) => ({
-          name: cottage.name,
-          description: cottage.description,
-          price: cottage.price,
-        })),
+        selected_cottage_id: selectedCottage.id,
         number_of_adult: String(olderGuests),
         number_of_kids: String(children),
         total_price: bookingTotal,
-        summary: `${children} kids, ${olderGuests} adults, ${selectedCottages.length} cottage(s) selected.`,
+        summary: `${children} kids, ${olderGuests} adults, 1 cottage selected.`,
         checkIn: localCheckIn.toISOString(),
         checkOut: localCheckOut.toISOString(),
         selectedDateKey,
@@ -585,12 +570,11 @@ export default function SecondPage() {
                   >
                     <CarouselContent>
                       {cottages.map((cottage) => {
-                        const isSelected = selectedCottageIds.includes(
-                          cottage.id,
-                        );
-                        const isUnavailable = unavailableCottageNameSet.has(
-                          cottage.name,
-                        );
+                        const isSelected = selectedCottageId === cottage.id;
+                        const isUnavailable = isCottageFullyBooked(cottage);
+                        const reservedCount =
+                          reservedByCottageId[cottage.id] ?? 0;
+                        const totalQuantity = cottage.quantity ?? 1;
 
                         return (
                           <CarouselItem
@@ -619,9 +603,9 @@ export default function SecondPage() {
                               }`}
                             >
                               <div className="relative aspect-[4/3] w-full overflow-hidden">
-                                {cottage.image ? (
+                                {cottage.imageUrl ? (
                                   <Image
-                                    src={cottage.image}
+                                    src={cottage.imageUrl}
                                     alt={cottage.name}
                                     fill
                                     className="object-cover"
@@ -703,13 +687,14 @@ export default function SecondPage() {
                                 </motion.span>
                                 {isUnavailable && (
                                   <span className="absolute inset-x-3 bottom-3 bg-brown px-3 py-2 text-center font-googlesansflex text-xs font-semibold uppercase tracking-wide text-cream shadow">
-                                    Reserved for this date
+                                    Fully booked ({reservedCount}/
+                                    {totalQuantity})
                                   </span>
                                 )}
                               </div>
                               <div className="grid gap-3 p-4">
                                 <div className="flex items-start justify-between gap-4">
-                                  <h3 className="font-heading text-2xl">
+                                  <h3 className="font-heading text-xl">
                                     {cottage.name}
                                   </h3>
                                   <span className="font-googlesansflex text-lg font-semibold">
@@ -721,6 +706,11 @@ export default function SecondPage() {
                                 </p>
                                 <p className="font-googlesansflex text-sm font-semibold uppercase text-brown">
                                   Capacity: {cottage.capacity}
+                                </p>
+                                <p className="font-googlesansflex text-xs uppercase text-brown/70">
+                                  Remaining:{" "}
+                                  {Math.max(totalQuantity - reservedCount, 0)} /{" "}
+                                  {totalQuantity}
                                 </p>
                               </div>
                             </motion.button>

@@ -116,6 +116,25 @@ export function BookingsTable({
   const [proofZoom, setProofZoom] = useState(1);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isPending, startTransition] = useTransition();
+  const [availabilityOpen, setAvailabilityOpen] = useState(false);
+  const [availabilityDate, setAvailabilityDate] = useState(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  });
+  const [availabilityRows, setAvailabilityRows] = useState<
+    Array<{
+      id: string;
+      name: string;
+      capacity: string;
+      quantity: number;
+      reserved: number;
+      remaining: number;
+    }>
+  >([]);
+  const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [isRealtimeSubscribed, setIsRealtimeSubscribed] = useState(false);
   const [rows, setRows] = useState<BookingRow[]>(bookings);
@@ -233,10 +252,63 @@ export function BookingsTable({
     return () => clearInterval(interval);
   }, [currentPage, isRealtimeSubscribed, pageSize]);
 
+  useEffect(() => {
+    if (!availabilityOpen) return;
+    setIsLoadingAvailability(true);
+    const timezoneOffset = new Date().getTimezoneOffset();
+    void Promise.all([
+      fetch("/api/cottages", { cache: "no-store" }).then((response) =>
+        response.ok ? response.json() : null,
+      ),
+      fetch(
+        `/api/bookings?availabilityDate=${availabilityDate}&timezoneOffset=${timezoneOffset}`,
+        { cache: "no-store" },
+      ).then((response) => (response.ok ? response.json() : null)),
+    ])
+      .then(([cottageData, availabilityData]) => {
+        const cottages = Array.isArray(cottageData?.cottages)
+          ? (cottageData.cottages as Array<{
+              id: string;
+              name: string;
+              capacity: string;
+              quantity?: number | null;
+            }>)
+          : [];
+        const reservedByCottageId =
+          availabilityData?.reservedByCottageId &&
+          typeof availabilityData.reservedByCottageId === "object"
+            ? (availabilityData.reservedByCottageId as Record<string, number>)
+            : {};
+        setAvailabilityRows(
+          cottages.map((cottage) => {
+            const quantity = cottage.quantity ?? 1;
+            const reserved = reservedByCottageId[cottage.id] ?? 0;
+            return {
+              id: cottage.id,
+              name: cottage.name,
+              capacity: cottage.capacity,
+              quantity,
+              reserved,
+              remaining: Math.max(quantity - reserved, 0),
+            };
+          }),
+        );
+      })
+      .finally(() => setIsLoadingAvailability(false));
+  }, [availabilityDate, availabilityOpen]);
+
   return (
     <>
       <div className="flex flex-wrap items-center justify-end gap-6">
         <div className="flex gap-2 items-center">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => setAvailabilityOpen(true)}
+          >
+            Available Cottages
+          </Button>
           <label className="inline-flex items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -269,8 +341,33 @@ export function BookingsTable({
           >
             Bulk Delete ({selectedIds.length})
           </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button type="button" size="icon-sm" variant="outline">
+                <MoreHorizontal />
+                <span className="sr-only">Open booking view options</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onSelect={() => setViewMode("table")}>
+                Table {viewMode === "table" ? "•" : ""}
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setViewMode("cards")}>
+                Cards {viewMode === "cards" ? "•" : ""}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => setPaymentFilter("all")}>
+                All {paymentFilter === "all" ? "•" : ""}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => setPaymentFilter("unpaid_overdue")}
+              >
+                Unpaid 30m+ {paymentFilter === "unpaid_overdue" ? "•" : ""}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-        <div className="flex gap-2 items-center">
+        {/* <div className="flex gap-2 items-center">
           <Button
             type="button"
             size="sm"
@@ -305,7 +402,7 @@ export function BookingsTable({
           >
             Unpaid 30m+
           </Button>
-        </div>
+        </div> */}
       </div>
 
       {viewMode === "table" ? (
@@ -814,6 +911,66 @@ export function BookingsTable({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={availabilityOpen} onOpenChange={setAvailabilityOpen}>
+        <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Available Cottages</DialogTitle>
+            <DialogDescription>
+              Shows cottage availability for the selected date.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4">
+            <label className="grid gap-1 text-sm">
+              Date
+              <input
+                type="date"
+                value={availabilityDate}
+                onChange={(event) => setAvailabilityDate(event.target.value)}
+                className="h-10 rounded-md border bg-background px-3"
+              />
+            </label>
+            <div className="overflow-hidden rounded-lg border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Cottage</TableHead>
+                    <TableHead>Capacity</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead>Reserved</TableHead>
+                    <TableHead>Available</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoadingAvailability ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-20 text-center text-muted-foreground">
+                        Loading...
+                      </TableCell>
+                    </TableRow>
+                  ) : availabilityRows.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-20 text-center text-muted-foreground">
+                        No cottages found.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    availabilityRows.map((row) => (
+                      <TableRow key={row.id}>
+                        <TableCell className="font-medium">{row.name}</TableCell>
+                        <TableCell>{row.capacity}</TableCell>
+                        <TableCell>{row.quantity}</TableCell>
+                        <TableCell>{row.reserved}</TableCell>
+                        <TableCell>{row.remaining}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

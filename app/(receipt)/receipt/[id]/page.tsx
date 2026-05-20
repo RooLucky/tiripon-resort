@@ -39,11 +39,7 @@ export default async function ReceiptPage({
       id: receiptId,
     },
     include: {
-      booking: {
-        include: {
-          cottage: true,
-        },
-      },
+      booking: true,
     },
   });
 
@@ -62,6 +58,11 @@ export default async function ReceiptPage({
   }
 
   const isPaid = receipt.status === "paid";
+  const selectedCottage = receipt.booking.selected_cottage_id
+    ? await prisma.cottages.findUnique({
+        where: { id: receipt.booking.selected_cottage_id },
+      })
+    : null;
 
   return (
     <main className="min-h-dvh bg-cream px-3 py-4 text-brown sm:px-4 sm:py-8 md:px-[5dvw] md:py-16">
@@ -94,17 +95,16 @@ export default async function ReceiptPage({
                 Cottages
               </span>
               <ul className="mt-2 grid gap-2">
-                {receipt.booking.cottage.map((cottage) => (
-                  <li
-                    key={cottage.id}
-                    className="grid gap-1 border-b border-brown/10 pb-2 sm:grid-cols-[1fr_auto] sm:gap-4"
-                  >
-                    <span className="break-words">{cottage.name}</span>
+                {selectedCottage ? (
+                  <li className="grid gap-1 border-b border-brown/10 pb-2 sm:grid-cols-[1fr_auto] sm:gap-4">
+                    <span className="break-words">{selectedCottage.name}</span>
                     <span className="font-semibold">
-                      {formatCurrency(cottage.price)}
+                      {formatCurrency(selectedCottage.price)}
                     </span>
                   </li>
-                ))}
+                ) : (
+                  <li className="text-brown/70">No cottage selected.</li>
+                )}
               </ul>
             </div>
           </div>

@@ -1,29 +1,18 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import {
-  BotMessageSquare,
-  CalendarCheck,
-  Home,
-  LogOut,
-  Trash2,
-} from "lucide-react";
+import { LogOut } from "lucide-react";
 
 import { auth, signOut } from "@/auth";
+import { AdminSidebarNav } from "@/components/admin/admin-sidebar-nav";
 import {
   Sidebar,
-  SidebarContent,
   SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
   SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
   SidebarRail,
-  SidebarSeparator,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 
@@ -52,53 +41,7 @@ export default async function AdminLayout({
   return (
     <SidebarProvider defaultOpen={defaultSidebarOpen}>
       <Sidebar collapsible="icon">
-        <SidebarHeader>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild size="lg">
-                <a href="/bookings">
-                  <Home />
-                  <span>Resort Admin</span>
-                </a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarHeader>
-        <SidebarSeparator />
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel>Management</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive>
-                    <a href="/bookings">
-                      <CalendarCheck />
-                      <span>Bookings</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <a href="/bin">
-                      <Trash2 />
-                      <span>Recycle Bin</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <a href="/chatbot-management">
-                      <BotMessageSquare />
-                      <span>Chatbot Nodes</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
+        <AdminSidebarNav />
         <SidebarFooter>
           <SidebarMenu>
             <SidebarMenuItem>

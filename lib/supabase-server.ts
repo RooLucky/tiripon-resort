@@ -19,3 +19,7 @@ export function getSupabaseAdminClient() {
 export function getReceiptsBucketName() {
   return process.env.SUPABASE_RECEIPTS_BUCKET ?? "receipts";
 }
+
+export function getCottagesBucketName() {
+  return process.env.SUPABASE_COTTAGES_BUCKET ?? "cottages";
+}
