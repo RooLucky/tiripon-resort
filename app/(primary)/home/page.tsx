@@ -10,7 +10,7 @@ export default function Home() {
       <HeroPage />
       <div className="md:block hidden">
         <VideoPage />
-        <SecondPage />
+        <SecondPage />  
       </div>
       <ThirdPage />
       <FourthPage />
