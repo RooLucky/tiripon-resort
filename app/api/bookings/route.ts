@@ -66,7 +66,9 @@ async function getPaidCottageReservationCountsForDay(
       receipt: {
         is: {
           OR: [
-            { status: "paid" },
+            {
+              AND: [{ status: "paid" }, { status: { not: "denied" } }],
+            },
             { receipt_confirmation: true },
           ],
         },

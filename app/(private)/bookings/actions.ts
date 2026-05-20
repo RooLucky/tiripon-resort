@@ -155,7 +155,25 @@ export async function confirmReceipt(receiptId: string) {
       id: receiptId,
     },
     data: {
+      status: "paid",
       receipt_confirmation: true,
+    },
+  });
+
+  revalidatePath("/bookings");
+}
+
+export async function denyReceipt(receiptId: string) {
+  await requireAdmin();
+  if (typeof receiptId !== "string" || receiptId.trim().length === 0) {
+    throw new Error("Invalid receipt id.");
+  }
+
+  await prisma.receipt.update({
+    where: { id: receiptId },
+    data: {
+      status: "denied",
+      receipt_confirmation: false,
     },
   });
 

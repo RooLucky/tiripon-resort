@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import {
+  Ban,
   CheckCircle2,
   Eye,
   MoreHorizontal,
@@ -13,6 +14,7 @@ import {
 
 import {
   confirmReceipt,
+  denyReceipt,
   deleteBooking,
 } from "@/app/(private)/bookings/actions";
 import { Badge } from "@/components/ui/badge";
@@ -108,6 +110,7 @@ export function BookingsTable({
   const [receiptToConfirm, setReceiptToConfirm] = useState<BookingRow | null>(
     null,
   );
+  const [receiptToDeny, setReceiptToDeny] = useState<BookingRow | null>(null);
   const [proofToView, setProofToView] = useState<{
     name: string;
     url: string;
@@ -301,14 +304,6 @@ export function BookingsTable({
     <>
       <div className="flex flex-wrap items-center justify-end gap-6">
         <div className="flex gap-2 items-center">
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => setAvailabilityOpen(true)}
-          >
-            Available Cottages
-          </Button>
           <label className="inline-flex items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -354,6 +349,10 @@ export function BookingsTable({
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setViewMode("cards")}>
                 Cards {viewMode === "cards" ? "•" : ""}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => setAvailabilityOpen(true)}>
+                Available Cottages
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => setPaymentFilter("all")}>
@@ -529,6 +528,16 @@ export function BookingsTable({
                             <CheckCircle2 />
                             Receipt confirmation
                           </DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={
+                              !booking.receipt ||
+                              booking.receipt.status === "denied"
+                            }
+                            onSelect={() => setReceiptToDeny(booking)}
+                          >
+                            <Ban />
+                            Deny receipt
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             variant="destructive"
@@ -620,6 +629,16 @@ export function BookingsTable({
                   >
                     <CheckCircle2 />
                     Confirm
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={!booking.receipt || booking.receipt.status === "denied"}
+                    onClick={() => setReceiptToDeny(booking)}
+                  >
+                    <Trash2 />
+                    Deny
                   </Button>
                   <Button
                     type="button"
@@ -870,6 +889,42 @@ export function BookingsTable({
               }}
             >
               Confirm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={Boolean(receiptToDeny)}
+        onOpenChange={(open) => !open && setReceiptToDeny(null)}
+      >
+        <AlertDialogContent className="max-h-[90dvh] overflow-y-auto">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deny receipt?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This marks the receipt for {receiptToDeny?.name} as denied and
+              will release cottage availability for this booking date.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={isPending || !receiptToDeny?.receipt}
+              onClick={(event) => {
+                event.preventDefault();
+                if (!receiptToDeny?.receipt) return;
+
+                const receiptId = receiptToDeny.receipt.id;
+
+                startTransition(() => {
+                  void denyReceipt(receiptId).then(() => {
+                    setReceiptToDeny(null);
+                  });
+                });
+              }}
+            >
+              Deny
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
