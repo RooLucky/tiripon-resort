@@ -145,6 +145,10 @@ export default function Footer() {
     }
   };
 
+  const linkUrl = (url = "https://www.facebook.com/profile.php?id=61589851403999") => {
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
   return (
     <>
       <footer className="relative w-full overflow-hidden border-t border-brown/20 bg-gradient-to-b from-cream via-cream to-amber-50/70 text-brown">
@@ -184,6 +188,7 @@ export default function Footer() {
                       whileHover={
                         shouldReduceMotion ? {} : { y: -2, scale: 1.04 }
                       }
+                      onClick={() => linkUrl()}
                       transition={{ duration: 0.2 }}
                       className="h-10 w-10 cursor-pointer rounded-sm border border-brown/10 bg-white/60 p-1.5"
                       src={`svg/${social}.svg`}

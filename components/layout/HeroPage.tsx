@@ -85,7 +85,7 @@ export default function HeroPage() {
                 </motion.h1>
 
                 <motion.p
-                  className="text-cream w-full md:max-w-[35dvw] rounded p-4 md:text-xl text-lg font-googlesansflex"
+                  className="text-cream w-full md:max-w-[35dvw] rounded md:text-xl text-lg font-googlesansflex"
                   style={{ textShadow: "0 2px 8px rgba(0,0,0,1)" }}
                   variants={{
                     hidden: { opacity: 0, y: 26 },
