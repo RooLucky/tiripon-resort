@@ -1,283 +1,229 @@
 "use client";
 
 import Image from "next/image";
-import { ArrowRight, MoveLeft, MoveRight } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "../ui/button";
 
 const resortSlides = [
   {
     name: "Quiet Place",
-    description:
-      "A calm corner for slow mornings and restful afternoons, with open skies and a peaceful Mt. Mayon view in the distance.",
+    description: "A calm corner for slow mornings and restful afternoons.",
     image: "/images/2.png",
+    price: "₱1,200 / DAY USE",
   },
   {
     name: "Golden Hours",
-    description:
-      "Settle into soft afternoon light and quiet conversations while the landscape opens toward the Mt. Mayon horizon.",
+    description: "Soft afternoon light and relaxed open-air comfort.",
     image: "/images/3.png",
+    price: "₱1,500 / DAY USE",
   },
   {
     name: "Breathe and Gather",
-    description:
-      "Wide, airy spaces made for shared moments, where breezy interiors and the distant Mt. Mayon view shape a relaxed day.",
+    description: "Wide airy spaces made for shared moments.",
     image: "/images/4.png",
+    price: "₱1,800 / DAY USE",
   },
   {
     name: "Private Retreat",
-    description:
-      "Surrounded by greenery and gentle breeze, this peaceful retreat offers quiet privacy with glimpses of Mt. Mayon beyond.",
+    description: "Peaceful privacy surrounded by greenery.",
     image: "/images/5.png",
+    price: "₱2,000 / DAY USE",
   },
 ];
 
+const CARDS_VISIBLE_DESKTOP = 4;
+
 export default function ThirdPage() {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const autoplayRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [startIndex, setStartIndex] = useState(0);
+  const [mobileIndex, setMobileIndex] = useState(1);
+  const [mobileTransition, setMobileTransition] = useState(true);
+  const total = resortSlides.length;
+  const pages = Math.max(total - CARDS_VISIBLE_DESKTOP + 1, 1);
+  const mobileSlides = useMemo(
+    () => [resortSlides[total - 1], ...resortSlides, resortSlides[0]],
+    [total],
+  );
 
-  const startAutoplay = () => {
-    if (autoplayRef.current) {
-      clearInterval(autoplayRef.current);
-    }
+  const visibleSlides = useMemo(() => {
+    return Array.from(
+      { length: Math.min(CARDS_VISIBLE_DESKTOP, total) },
+      (_, idx) => {
+      return resortSlides[(startIndex + idx) % total];
+      },
+    );
+  }, [startIndex, total]);
 
-    autoplayRef.current = setInterval(() => {
-      setActiveIndex(
-        (currentIndex) => (currentIndex + 1) % resortSlides.length,
-      );
-    }, 10000);
+  const prev = () => {
+    setStartIndex((current) => (current - 1 + total) % total);
+    setMobileTransition(true);
+    setMobileIndex((current) => current - 1);
+  };
+  const next = () => {
+    setStartIndex((current) => (current + 1) % total);
+    setMobileTransition(true);
+    setMobileIndex((current) => current + 1);
   };
 
   useEffect(() => {
-    startAutoplay();
+    if (mobileIndex === 0 || mobileIndex === total + 1) {
+      const timer = setTimeout(() => {
+        setMobileTransition(false);
+        setMobileIndex(mobileIndex === 0 ? total : 1);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [mobileIndex, total]);
 
-    return () => {
-      if (autoplayRef.current) clearInterval(autoplayRef.current);
-    };
-  }, []);
-
-  const handleSlideSelect = (index: number) => {
-    setActiveIndex(index);
-    startAutoplay();
-  };
-
-  const handlePreviousSlide = () => {
-    setActiveIndex((currentIndex) =>
-      currentIndex === 0 ? resortSlides.length - 1 : currentIndex - 1,
-    );
-    startAutoplay();
-  };
-
-  const handleNextSlide = () => {
-    setActiveIndex((currentIndex) => (currentIndex + 1) % resortSlides.length);
-    startAutoplay();
-  };
-
-  const activeSlide = resortSlides[activeIndex] ?? resortSlides[0];
+  useEffect(() => {
+    if (!mobileTransition) {
+      const frame = requestAnimationFrame(() => setMobileTransition(true));
+      return () => cancelAnimationFrame(frame);
+    }
+  }, [mobileTransition]);
 
   return (
-    <section className="min-h-dvh w-full px-2 py-10 sm:px-5 md:px-[5dvw] md:py-20">
+    <section className="relative overflow-hidden bg-cream px-4 py-16 text-brown md:px-[5dvw] md:py-24">
+      <div className="pointer-events-none absolute inset-0 opacity-30">
+        <div className="mx-auto grid h-full max-w-[92rem] grid-cols-4 border-x border-brown/10 md:grid-cols-8">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="border-r border-brown/10 last:border-r-0" />
+          ))}
+        </div>
+      </div>
+
       <motion.div
-        className="mx-auto grid w-full max-w-[92rem] gap-10 md:grid-cols-[0.9fr_1.9fr]"
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.25 }}
-        variants={{
-          hidden: {},
-          visible: {
-            transition: {
-              staggerChildren: 0.16,
-            },
-          },
-        }}
+        className="relative mx-auto max-w-[92rem]"
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
       >
-        <motion.aside
-          className="relative z-30 flex flex-col gap-6 rounded-2xl border border-brown/10 bg-cream/45 p-5 shadow-sm md:rounded-none md:border-0 md:bg-transparent md:p-0 md:shadow-none"
-          variants={{
-            hidden: { opacity: 0, x: -34 },
-            visible: {
-              opacity: 1,
-              x: 0,
-              transition: { duration: 0.75, ease: "easeOut" },
-            },
-          }}
-        >
-          <div>
-            <p className="font-googlesansflex text-sm font-semibold uppercase text-brown">
-              Tiripon Spring Resort
-            </p>
-            <div className="mt-2 h-px w-24 bg-tan" />
-            <h2 className="mt-5 max-w-sm font-heading text-[1.85rem] leading-[0.95] text-brown sm:text-4xl md:mt-6 md:text-5xl">
-              A Day At Spring Resort
-            </h2>
-          </div>
+        <div className="text-center">
+          <p className="font-googlesansflex text-sm font-semibold uppercase tracking-[0.12em] text-brown/75">
+            Accomodation & Comfort
+          </p>
+          <div className="mx-auto mt-2 h-px w-24 bg-tan" />
+          <h2 className="mt-5 font-heading text-5xl md:text-7xl">Rooms & Suites</h2>
+        </div>
 
-          <div className="relative z-30 flex flex-col items-start gap-2">
-            {resortSlides.map((slide, index) => (
-              <Button
-                key={slide.name}
-                type="button"
-                variant="ghost"
-                onClick={() => handleSlideSelect(index)}
-                aria-pressed={index === activeIndex}
-                className={`mb-2 h-auto justify-start rounded-none bg-transparent p-0 text-left font-googlesansflex text-[1.7rem] leading-none shadow-none hover:bg-transparent focus-visible:ring-brown/30 sm:text-4xl ${
-                  index === activeIndex
-                    ? "text-brown"
-                    : "text-brown/55 hover:text-brown/80"
-                }`}
+        <div className="mt-10 overflow-hidden md:hidden">
+          <div
+            className="flex ease-out"
+            style={{
+              transform: `translateX(-${mobileIndex * 100}%)`,
+              transition: mobileTransition ? "transform 500ms" : "none",
+            }}
+          >
+            {mobileSlides.map((slide, idx) => (
+              <article
+                key={`mobile-${slide.name}-${slide.image}-${idx}`}
+                className="group relative w-full shrink-0 overflow-hidden rounded-2xl border border-brown/15 bg-stone/25"
               >
-                {slide.name}
-              </Button>
-            ))}
-            <p className="mt-4 max-w-md font-googlesansflex text-[0.98rem] leading-7 text-brown/75 sm:text-lg sm:leading-8">
-              {activeSlide.description}
-            </p>
-          </div>
-        </motion.aside>
-
-        <motion.div
-          variants={{
-            hidden: { opacity: 0, y: 38 },
-            visible: {
-              opacity: 1,
-              y: 0,
-              transition: { duration: 0.75, ease: "easeOut" },
-            },
-          }}
-        >
-          <motion.div
-            className="mb-6 flex flex-col gap-5 md:flex-row md:items-center md:justify-between"
-            variants={{
-              hidden: { opacity: 0, y: 22 },
-              visible: {
-                opacity: 1,
-                y: 0,
-                transition: { duration: 0.65, ease: "easeOut" },
-              },
-            }}
-          >
-            <p className="max-w-2xl font-googlesansflex text-base leading-7 text-brown/65 md:text-lg md:leading-8">
-              Tiripon Spring Resort is designed for refreshing day escapes, with
-              open-air cottages, poolside lounging, and natural spring water
-              experiences that keep every visit calm, cool, and easy.
-            </p>
-          </motion.div>
-
-          <motion.div
-            className="group/carousel relative"
-            variants={{
-              hidden: { opacity: 0, scale: 0.97 },
-              visible: {
-                opacity: 1,
-                scale: 1,
-                transition: { duration: 0.75, ease: "easeOut" },
-              },
-            }}
-          >
-            <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl bg-tan sm:aspect-[16/10]">
-              <AnimatePresence initial={false} mode="sync">
-                <motion.div
-                  key={activeSlide.name}
-                  className="absolute inset-0"
-                  initial={{ opacity: 0, scale: 1.025 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.985 }}
-                  transition={{
-                    opacity: { duration: 0.65, ease: "easeInOut" },
-                    scale: { duration: 0.9, ease: "easeOut" },
-                  }}
-                >
+                <div className="relative aspect-[3/4]">
                   <Image
-                    src={activeSlide.image}
-                    alt={activeSlide.name}
+                    src={slide.image}
+                    alt={slide.name}
                     fill
-                    className="object-cover"
-                    sizes="(min-width: 768px) 66vw, 90vw"
-                    priority={activeIndex === 0}
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    sizes="92vw"
                   />
-                </motion.div>
-              </AnimatePresence>
-            </div>
+                </div>
+                <div className="absolute inset-x-0 bottom-0 bg-till/95 p-5 text-cream">
+                  <h3 className="font-heading text-4xl leading-none">{slide.name}</h3>
+                  <p className="mt-4 font-googlesansflex text-xs uppercase tracking-[0.12em] text-cream/70">
+                    Stay from
+                  </p>
+                  <p className="mt-1 font-googlesansflex text-lg font-semibold text-khaki">
+                    {slide.price}
+                  </p>
+                  <p className="mt-2 font-googlesansflex text-sm text-cream/80">
+                    {slide.description}
+                  </p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
 
-            <Button
-              type="button"
-              size="icon-lg"
-              onClick={handlePreviousSlide}
-              aria-label="Previous slide"
-              className="absolute left-3 top-1/2 z-40 hidden size-11 -translate-y-1/2 rounded-full border border-cream bg-tan/95 text-brown opacity-0 shadow-md transition-opacity duration-200 hover:bg-khaki group-hover/carousel:opacity-100 md:flex md:size-12"
+        <div className="mt-10 hidden gap-4 md:grid md:grid-cols-4">
+          {visibleSlides.map((slide) => (
+            <article
+              key={`${slide.name}-${slide.image}`}
+              className="group relative overflow-hidden rounded-2xl border border-brown/15 bg-stone/25"
             >
-              <MoveLeft className="size-5 sm:size-6 md:size-8" />
-            </Button>
-            <Button
-              type="button"
-              size="icon-lg"
-              onClick={handleNextSlide}
-              aria-label="Next slide"
-              className="absolute right-3 top-1/2 z-40 hidden size-11 -translate-y-1/2 rounded-full border border-cream bg-tan/95 text-brown opacity-0 shadow-md transition-opacity duration-200 hover:bg-khaki group-hover/carousel:opacity-100 md:flex md:size-12"
-            >
-              <MoveRight className="size-5 sm:size-6 md:size-8" />
-            </Button>
-            <div className="mt-4 flex items-center justify-center gap-2 md:hidden">
-              <Button
-                type="button"
-                onClick={handlePreviousSlide}
-                variant="outline"
-                size="icon-sm"
-                className="h-8 w-8 rounded-full border-brown/30 bg-transparent text-brown hover:bg-khaki/40"
-                aria-label="Previous slide"
-              >
-                <MoveLeft className="size-4" />
-              </Button>
-              <div
-                className="flex items-center justify-center gap-2"
-                aria-label="Select resort image"
-              >
-                {resortSlides.map((slide, index) => (
-                  <button
-                    key={slide.name}
-                    type="button"
-                    onClick={() => handleSlideSelect(index)}
-                    aria-label={`Show ${slide.name}`}
-                    aria-current={index === activeIndex ? "true" : undefined}
-                    className={`h-2.5 rounded-full transition-all ${
-                      index === activeIndex
-                        ? "w-8 bg-brown"
-                        : "w-2.5 bg-brown/30"
-                    }`}
-                  />
-                ))}
-              </div>
-              <Button
-                type="button"
-                onClick={handleNextSlide}
-                variant="outline"
-                size="icon-sm"
-                className="h-8 w-8 rounded-full border-brown/30 bg-transparent text-brown hover:bg-khaki/40"
-                aria-label="Next slide"
-              >
-                <MoveRight className="size-4" />
-              </Button>
-            </div>
-            <div
-              className="mt-4 hidden items-center justify-center gap-2 md:flex"
-              aria-label="Select resort image"
-            >
-              {resortSlides.map((slide, index) => (
-                <button
-                  key={slide.name}
-                  type="button"
-                  onClick={() => handleSlideSelect(index)}
-                  aria-label={`Show ${slide.name}`}
-                  aria-current={index === activeIndex ? "true" : undefined}
-                  className={`h-2.5 rounded-full transition-all ${
-                    index === activeIndex ? "w-8 bg-brown" : "w-2.5 bg-brown/30"
-                  }`}
+              <div className="relative aspect-[3/4]">
+                <Image
+                  src={slide.image}
+                  alt={slide.name}
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  sizes="(min-width: 768px) 22vw, 88vw"
                 />
-              ))}
-            </div>
-          </motion.div>
-        </motion.div>
+              </div>
+              <div className="absolute inset-x-0 bottom-0 bg-till/95 p-5 text-cream">
+                <h3 className="font-heading text-4xl leading-none">{slide.name}</h3>
+                <p className="mt-4 font-googlesansflex text-xs uppercase tracking-[0.12em] text-cream/70">
+                  Stay from
+                </p>
+                <p className="mt-1 font-googlesansflex text-lg font-semibold text-khaki">
+                  {slide.price}
+                </p>
+                <p className="mt-2 font-googlesansflex text-sm text-cream/80">
+                  {slide.description}
+                </p>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <div className="mt-8 flex items-center justify-center gap-6">
+          <Button
+            type="button"
+            size="icon"
+            variant="outline"
+            onClick={prev}
+            className="rounded-full border-brown/30 bg-cream text-brown hover:bg-khaki/50"
+          >
+            <ArrowLeft className="size-4" />
+          </Button>
+
+          <div className="flex items-center gap-2">
+            {Array.from({ length: total }).map((_, idx) => (
+              <button
+                key={`mobile-dot-${idx}`}
+                type="button"
+                onClick={() => setStartIndex(idx)}
+                className={`h-2.5 rounded-full transition-all md:hidden ${
+                  idx === startIndex ? "w-7 bg-olive" : "w-2.5 bg-brown/25"
+                }`}
+                aria-label={`Go to slide ${idx + 1}`}
+              />
+            ))}
+            {Array.from({ length: pages }).map((_, idx) => (
+              <button
+                key={`desktop-dot-${idx}`}
+                type="button"
+                onClick={() => setStartIndex(idx)}
+                className={`hidden h-2.5 rounded-full transition-all md:block ${
+                  idx === startIndex ? "w-7 bg-olive" : "w-2.5 bg-brown/25"
+                }`}
+                aria-label={`Go to slide ${idx + 1}`}
+              />
+            ))}
+          </div>
+
+          <Button
+            type="button"
+            size="icon"
+            variant="outline"
+            onClick={next}
+            className="rounded-full border-brown/30 bg-cream text-brown hover:bg-khaki/50"
+          >
+            <ArrowRight className="size-4" />
+          </Button>
+        </div>
       </motion.div>
     </section>
   );
