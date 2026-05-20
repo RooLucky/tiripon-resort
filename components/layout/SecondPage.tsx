@@ -642,12 +642,10 @@ export default function SecondPage() {
                             >
                               <div className="relative aspect-[4/3] w-full overflow-hidden">
                                 {cottage.imageUrl ? (
-                                  <Image
+                                  <img
                                     src={cottage.imageUrl}
                                     alt={cottage.name}
-                                    fill
-                                    className="object-cover"
-                                    sizes="(min-width: 1024px) 36vw, 82vw"
+                                    className="w-full h-full object-cover object-center"
                                   />
                                 ) : (
                                   <Image

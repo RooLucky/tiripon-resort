@@ -16,7 +16,7 @@ const defaultCottages = [
       "A straightforward day-use cabana setup with open-air comfort for quick family breaks.",
     price: 500,
     capacity: "10 - 12",
-    imageFile: "cabana-1-500.jpg",
+    imageFile: "cabana-1-500.png",
   },
   {
     name: "Poolside Cabana",
@@ -32,7 +32,7 @@ const defaultCottages = [
       "Set beside lush greenery with a quieter atmosphere, designed for laid-back gatherings and privacy.",
     price: 400,
     capacity: "6 - 8",
-    imageFile: "cabana-3-400.jpg",
+    imageFile: "cabana-3-400.png",
   },
   {
     name: "5ft Cottage",
@@ -56,7 +56,7 @@ const defaultCottages = [
       "Compact shaded umbrella setup for light day-use stays and quick poolside breaks.",
     price: 200,
     capacity: "2 - 4",
-    imageFile: "small-umbrella-200.jpg",
+    imageFile: "small-umbrella-200.png",
   },
   {
     name: "Standard Umbrella",
@@ -64,7 +64,7 @@ const defaultCottages = [
       "Standard umbrella space with comfortable shade, suited for small groups and casual stays.",
     price: 250,
     capacity: "4 - 6",
-    imageFile: "standard-umbrella-250.jpg",
+    imageFile: "standard-umbrella-250.png",
   },
 ] as const;
 
