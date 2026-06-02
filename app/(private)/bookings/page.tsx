@@ -155,6 +155,7 @@ export default async function AdminPage({
       ? {
           id: booking.receipt.id,
           status: booking.receipt.status,
+          fullyPaid: booking.receipt.fullyPaid,
           receiptConfirmation: Boolean(booking.receipt.receipt_confirmation),
           downPaymentAmount: formatCurrency(booking.receipt.downPaymentAmount),
           proofFileName: booking.receipt.proofFileName,

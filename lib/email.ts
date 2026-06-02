@@ -7,18 +7,8 @@ type ReservationEmailPayload = {
   receiptUrl: string;
   totalPrice: number;
   downPaymentAmount: number;
-};
-
-type AdminReservationNotificationPayload = {
-  name: string;
-  email: string | null;
-  phone: string | null;
-  checkIn: Date | null;
-  checkOut: Date | null;
-  totalPrice: number;
-  downPaymentAmount: number;
-  cottageName?: string | null;
-  summary?: string | null;
+  remainingBalance: number;
+  cottageName: string | null;
 };
 
 type AdminPaymentNotificationPayload = {
@@ -29,6 +19,9 @@ type AdminPaymentNotificationPayload = {
   checkOut: Date | null;
   totalPrice: number;
   downPaymentAmount: number;
+  remainingBalance: number;
+  fullyPaid: boolean;
+  cottageName: string | null;
   proofFileName: string | null;
   proofViewUrl: string | null;
   paidAt: Date | null;
@@ -162,13 +155,26 @@ function createAdminEmailHtml(
   intro: string,
   rows: Array<[string, string]>,
   actionUrl?: string,
+  secondaryAction?: { label: string; url: string },
 ) {
-  const actionButton = actionUrl
+  const actionButtons =
+    actionUrl || secondaryAction
     ? `
       <div style="margin: 24px 0 4px; text-align: center;">
-        <a href="${escapeHtml(actionUrl)}" style="display: inline-block; background: #4b382f; color: #fffaf0; text-decoration: none; padding: 13px 18px; font-weight: 700; font-size: 14px; line-height: 1.2; border-radius: 0;">
-          Open Bookings
-        </a>
+        ${
+          secondaryAction
+            ? `<a href="${escapeHtml(secondaryAction.url)}" style="display: inline-block; margin: 0 4px 10px; background: #4b382f; color: #fffaf0; text-decoration: none; padding: 13px 18px; font-weight: 700; font-size: 14px; line-height: 1.2; border-radius: 0;">
+              ${escapeHtml(secondaryAction.label)}
+            </a>`
+            : ""
+        }
+        ${
+          actionUrl
+            ? `<a href="${escapeHtml(actionUrl)}" style="display: inline-block; margin: 0 4px 10px; background: #fffaf0; color: #4b382f; text-decoration: none; padding: 12px 17px; font-weight: 700; font-size: 14px; line-height: 1.2; border: 1px solid #4b382f; border-radius: 0;">
+              Open Bookings
+            </a>`
+            : ""
+        }
       </div>
     `
     : "";
@@ -186,7 +192,7 @@ function createAdminEmailHtml(
             <table style="width: 100%; border-collapse: collapse; background: #fffaf0; border: 1px solid #eadfcd; table-layout: fixed;">
               <tbody>${createAdminDetailsRows(rows)}</tbody>
             </table>
-            ${actionButton}
+            ${actionButtons}
           </div>
         </div>
       </div>
@@ -200,6 +206,8 @@ export async function sendReservationEmail({
   receiptUrl,
   totalPrice,
   downPaymentAmount,
+  remainingBalance,
+  cottageName,
 }: ReservationEmailPayload) {
   const smtp = getSmtpConfig();
   const safeName = escapeHtml(name);
@@ -207,6 +215,7 @@ export async function sendReservationEmail({
   const safeReceiptUrl = escapeHtml(publicReceiptUrl);
   const formattedTotalPrice = formatCurrency(totalPrice);
   const formattedDownPaymentAmount = formatCurrency(downPaymentAmount);
+  const formattedRemainingBalance = formatCurrency(remainingBalance);
   const transporter = createTransporter(smtp);
 
   const qrPath = path.join(process.cwd(), "public", "images", "qr.jpg");
@@ -220,10 +229,12 @@ export async function sendReservationEmail({
       "",
       "Thank you for submitting your reservation request with Basagan Resort.",
       "",
-      "To secure your reservation, please settle the required 50% down payment within 30 minutes using the QR code included in this email.",
+      "To secure your reservation, please pay either the full bill or the 50% down payment within 30 minutes using the GCash QR code included in this email. This is a GCash only transaction.",
       "",
+      `Selected cottage: ${formatOptional(cottageName)}`,
       `Booking total: ${formattedTotalPrice}`,
-      `Required down payment: ${formattedDownPaymentAmount}`,
+      `50% down payment option: ${formattedDownPaymentAmount}`,
+      `Remaining balance if paying 50% now: ${formattedRemainingBalance}`,
       "",
       "After completing your payment, upload your receipt using this confirmation link:",
       publicReceiptUrl,
@@ -246,15 +257,20 @@ export async function sendReservationEmail({
               <p style="margin: 0 0 16px;">Dear ${safeName},</p>
               <p style="margin: 0 0 18px;">
                 Thank you for submitting your reservation request with Basagan Resort.
-                To secure your reservation, please settle the required 50% down payment
-                within 30 minutes using the QR code below.
+                To secure your reservation, please pay either the full bill or the
+                50% down payment within 30 minutes using the GCash QR code below.
+                This is a GCash only transaction.
               </p>
 
               <div style="margin: 26px auto; max-width: 420px; text-align: center; padding: 26px 22px; border: 1px solid #d8c6ad; background: #f5efe3;">
+                <p style="margin: 0 0 8px; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;">Selected Cottage</p>
+                <p style="margin: 0 0 22px; font-size: 20px; font-weight: 700;">${escapeHtml(formatOptional(cottageName))}</p>
                 <p style="margin: 0 0 8px; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;">Booking Total</p>
                 <p style="margin: 0 0 22px; font-size: 22px; font-weight: 700;">${formattedTotalPrice}</p>
-                <p style="margin: 0 0 8px; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;">Required 50% Down Payment</p>
-                <p style="margin: 0; font-size: 34px; line-height: 1; font-weight: 700;">${formattedDownPaymentAmount}</p>
+                <p style="margin: 0 0 8px; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;">50% Down Payment Option</p>
+                <p style="margin: 0 0 18px; font-size: 34px; line-height: 1; font-weight: 700;">${formattedDownPaymentAmount}</p>
+                <p style="margin: 0 0 8px; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;">Remaining Balance If Paying 50%</p>
+                <p style="margin: 0; font-size: 22px; line-height: 1.1; font-weight: 700;">${formattedRemainingBalance}</p>
               </div>
 
               <div style="text-align: center; margin: 28px 0;">
@@ -294,58 +310,6 @@ export async function sendReservationEmail({
   });
 }
 
-export async function sendAdminReservationNotification({
-  name,
-  email,
-  phone,
-  checkIn,
-  checkOut,
-  totalPrice,
-  downPaymentAmount,
-  cottageName,
-  summary,
-}: AdminReservationNotificationPayload) {
-  const smtp = getSmtpConfig();
-  const to = getNotificationRecipient();
-
-  if (!to) {
-    throw new Error("Reservation notification recipient is not configured.");
-  }
-
-  const bookingsUrl = resolveSitePath("/bookings");
-  const rows: Array<[string, string]> = [
-    ["Guest", name],
-    ["Email", formatOptional(email)],
-    ["Phone", formatOptional(phone)],
-    ["Check-in", formatDateTime(checkIn)],
-    ["Check-out", formatDateTime(checkOut)],
-    ["Cottage", formatOptional(cottageName)],
-    ["Booking total", formatCurrency(totalPrice)],
-    ["Required down payment", formatCurrency(downPaymentAmount)],
-    ["Summary", formatOptional(summary)],
-  ];
-
-  await createTransporter(smtp).sendMail({
-    from: `"${smtp.fromName}" <${smtp.from}>`,
-    to,
-    replyTo: email ?? undefined,
-    subject: `New reservation request: ${name}`,
-    text: [
-      "New reservation request received.",
-      "Open the admin Bookings page to review it:",
-      bookingsUrl,
-      "",
-      ...rows.map(([label, value]) => `${label}: ${value}`),
-    ].join("\n"),
-    html: createAdminEmailHtml(
-      "New Reservation Request",
-      "A guest submitted a new reservation request. Open the Bookings page to review it.",
-      rows,
-      bookingsUrl,
-    ),
-  });
-}
-
 export async function sendAdminPaymentNotification({
   name,
   email,
@@ -354,6 +318,9 @@ export async function sendAdminPaymentNotification({
   checkOut,
   totalPrice,
   downPaymentAmount,
+  remainingBalance,
+  fullyPaid,
+  cottageName,
   proofFileName,
   proofViewUrl,
   paidAt,
@@ -371,12 +338,17 @@ export async function sendAdminPaymentNotification({
     ["Phone", formatOptional(phone)],
     ["Check-in", formatDateTime(checkIn)],
     ["Check-out", formatDateTime(checkOut)],
+    ["Cottage", formatOptional(cottageName)],
+    ["Payment type", fullyPaid ? "Full payment" : "50% payment"],
     ["Booking total", formatCurrency(totalPrice)],
-    ["Required down payment", formatCurrency(downPaymentAmount)],
+    ["Amount paid", formatCurrency(downPaymentAmount)],
+    ["Remaining balance", formatCurrency(remainingBalance)],
     ["Receipt file", formatOptional(proofFileName)],
-    ["Receipt proof link", formatOptional(proofViewUrl)],
     ["Paid/uploaded at", formatDateTime(paidAt)],
   ];
+  const textRows: Array<[string, string]> = proofViewUrl
+    ? [...rows, ["Receipt proof link", proofViewUrl]]
+    : rows;
 
   await createTransporter(smtp).sendMail({
     from: `"${smtp.fromName}" <${smtp.from}>`,
@@ -386,13 +358,19 @@ export async function sendAdminPaymentNotification({
     text: [
       "Payment receipt uploaded for a reservation.",
       "",
-      ...rows.map(([label, value]) => `${label}: ${value}`),
+      ...textRows.map(([label, value]) => `${label}: ${value}`),
     ].join("\n"),
     html: createAdminEmailHtml(
       "Payment Receipt Uploaded",
       "A guest uploaded payment proof for a reservation.",
       rows,
       resolveSitePath("/bookings"),
+      proofViewUrl
+        ? {
+            label: "View Receipt Proof",
+            url: proofViewUrl,
+          }
+        : undefined,
     ),
   });
 }

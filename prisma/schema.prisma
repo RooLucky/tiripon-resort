@@ -66,6 +66,7 @@ model Receipt {
   bookingId            String    @unique
   downPaymentAmount    Float
   status               String    @default("pending")
+  fullyPaid            Boolean   @default(false)
   receipt_confirmation Boolean?  @default(false)
   proofFilePath        String?
   proofFileName        String?

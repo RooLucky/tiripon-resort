@@ -2,9 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { GcashPaymentNumber } from "@/components/receipt/GcashPaymentNumber";
 import { ReceiptUploadForm } from "@/components/receipt/ReceiptUploadForm";
 
 const RECEIPT_LINK_TTL_MS = 30 * 60 * 1000;
+const GCASH_PAYMENT_NUMBER = "09298810578";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-PH", {
@@ -58,6 +60,12 @@ export default async function ReceiptPage({
   }
 
   const isPaid = receipt.status === "paid";
+  const fullPaymentAmount = receipt.booking.total_price;
+  const halfPaymentAmount = receipt.booking.total_price * 0.5;
+  const remainingBalance = Math.max(
+    receipt.fullyPaid ? 0 : receipt.booking.total_price - receipt.downPaymentAmount,
+    0,
+  );
   const selectedCottage = receipt.booking.selected_cottage_id
     ? await prisma.cottages.findUnique({
         where: { id: receipt.booking.selected_cottage_id },
@@ -72,8 +80,11 @@ export default async function ReceiptPage({
             Reservation Receipt
           </p>
           <h1 className="mt-3 max-w-[11ch] font-heading text-4xl leading-[0.95] sm:text-5xl md:max-w-none md:text-7xl">
-            Down Payment Confirmation
+            Payment Confirmation
           </h1>
+          <p className="mt-4 inline-flex rounded-full bg-tan px-4 py-2 font-googlesansflex text-sm font-semibold text-brown md:rounded-none">
+            GCash transaction only
+          </p>
 
           <div className="mt-7 grid gap-5 font-googlesansflex text-sm sm:mt-8 md:text-base">
             <div>
@@ -120,14 +131,15 @@ export default async function ReceiptPage({
         <aside className="flex flex-col justify-between bg-tan p-5 text-brown sm:p-6 md:p-10">
           <div>
             <p className="font-googlesansflex text-xs font-semibold uppercase tracking-wide sm:text-sm">
-              Amount to pay
+              Payment starts at
             </p>
             <p className="mt-3 break-words font-heading text-4xl leading-none sm:text-5xl">
-              {formatCurrency(receipt.downPaymentAmount)}
+              {formatCurrency(halfPaymentAmount)}
             </p>
             <p className="mt-3 font-googlesansflex text-sm leading-6">
-              This is the required 50% down payment for your reservation. Please
-              send payment using the QR code below.
+              You can pay the 50% down payment or the full reservation total.
+              This is a GCash only transaction. Please send payment using the
+              QR code below, then upload your receipt.
             </p>
           </div>
 
@@ -140,6 +152,7 @@ export default async function ReceiptPage({
               className="h-auto w-full rounded-lg md:rounded-none"
             />
           </div>
+          <GcashPaymentNumber number={GCASH_PAYMENT_NUMBER} />
 
           <div className="mt-6 grid gap-2 rounded-xl bg-cream/55 p-4 font-googlesansflex text-sm md:rounded-none md:bg-transparent md:p-0">
             <p className="break-words">
@@ -148,6 +161,20 @@ export default async function ReceiptPage({
             </p>
             <p className="break-words">
               Booking total: {formatCurrency(receipt.booking.total_price)}
+            </p>
+            {isPaid && (
+              <p className="break-words">
+                Payment type: {receipt.fullyPaid ? "Full payment" : "50% payment"}
+              </p>
+            )}
+            <p className="break-words">
+              50% payment option: {formatCurrency(halfPaymentAmount)}
+            </p>
+            <p className="break-words">
+              Full payment option: {formatCurrency(fullPaymentAmount)}
+            </p>
+            <p className="break-words">
+              Remaining balance: {formatCurrency(remainingBalance)}
             </p>
             <p className="break-words">Upload link expires: {formatDate(expiresAt)}</p>
             {receipt.proofFileName && (
@@ -159,6 +186,9 @@ export default async function ReceiptPage({
             receiptId={receipt.id}
             disabled={isExpired}
             isPaid={isPaid}
+            downPaymentAmount={halfPaymentAmount}
+            fullPaymentAmount={fullPaymentAmount}
+            remainingBalance={Math.max(fullPaymentAmount - halfPaymentAmount, 0)}
           />
         </aside>
       </section>

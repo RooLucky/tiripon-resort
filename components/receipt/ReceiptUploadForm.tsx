@@ -3,6 +3,8 @@
 import { FormEvent, useState } from "react";
 import { CheckCircle2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Dialog,
   DialogContent,
@@ -15,10 +17,15 @@ type ReceiptUploadFormProps = {
   receiptId: string;
   disabled: boolean;
   isPaid: boolean;
+  downPaymentAmount: number;
+  fullPaymentAmount: number;
+  remainingBalance: number;
 };
 
 type UploadConfirmation = {
   status: string;
+  fullyPaid: boolean;
+  downPaymentAmount: number;
   proofFileName: string | null;
   proofUploadedAt: string | null;
   paidAt: string | null;
@@ -43,14 +50,25 @@ function formatDateTime(value: string | null) {
   }).format(new Date(value));
 }
 
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("en-PH", {
+    style: "currency",
+    currency: "PHP",
+  }).format(value);
+}
+
 export function ReceiptUploadForm({
   receiptId,
   disabled,
   isPaid,
+  downPaymentAmount,
+  fullPaymentAmount,
+  remainingBalance,
 }: ReceiptUploadFormProps) {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [paymentType, setPaymentType] = useState<"half" | "full">("half");
   const [confirmation, setConfirmation] = useState<UploadConfirmation | null>(
     null,
   );
@@ -83,6 +101,9 @@ export function ReceiptUploadForm({
       setConfirmation(
         result.receipt ?? {
           status: "paid",
+          fullyPaid: paymentType === "full",
+          downPaymentAmount:
+            paymentType === "full" ? fullPaymentAmount : downPaymentAmount,
           proofFileName: null,
           proofUploadedAt: null,
           paidAt: null,
@@ -122,6 +143,41 @@ export function ReceiptUploadForm({
   return (
     <>
       <form onSubmit={handleSubmit} className="mt-6 grid gap-3">
+        <div className="grid gap-3 rounded-xl bg-cream/70 p-3 font-googlesansflex md:rounded-none">
+          <span className="text-sm font-semibold">Payment option</span>
+          <RadioGroup
+            name="paymentType"
+            value={paymentType}
+            onValueChange={(value) => {
+              if (value === "half" || value === "full") setPaymentType(value);
+            }}
+            className="grid gap-2"
+          >
+            <div className="grid grid-cols-[auto_1fr] gap-3 rounded-xl border border-brown/15 bg-white p-3 leading-5 md:rounded-none">
+              <RadioGroupItem id="payment-half" value="half" className="mt-1" />
+              <Label htmlFor="payment-half" className="grid cursor-pointer gap-1">
+                <span className="font-semibold">
+                  50% down payment - {formatCurrency(downPaymentAmount)}
+                </span>
+                <span className="text-sm font-normal text-brown/70">
+                  Remaining balance: {formatCurrency(remainingBalance)}
+                </span>
+              </Label>
+            </div>
+            <div className="grid grid-cols-[auto_1fr] gap-3 rounded-xl border border-brown/15 bg-white p-3 leading-5 md:rounded-none">
+              <RadioGroupItem id="payment-full" value="full" className="mt-1" />
+              <Label htmlFor="payment-full" className="grid cursor-pointer gap-1">
+                <span className="font-semibold">
+                  Full payment - {formatCurrency(fullPaymentAmount)}
+                </span>
+                <span className="text-sm font-normal text-brown/70">
+                  No remaining balance after this payment.
+                </span>
+              </Label>
+            </div>
+          </RadioGroup>
+        </div>
+
         <label className="grid gap-2 font-googlesansflex text-sm font-semibold">
           Upload payment receipt
           <input
@@ -178,6 +234,22 @@ export function ReceiptUploadForm({
               </span>
               <span className="text-xl font-semibold capitalize">
                 {confirmation?.status ?? "paid"}
+              </span>
+            </div>
+            <div className="grid gap-2 border-b border-brown/15 pb-4">
+              <span className="text-xs font-semibold uppercase text-brown/60">
+                Payment Type
+              </span>
+              <span className="text-xl font-semibold">
+                {confirmation?.fullyPaid ? "Full payment" : "50% payment"}
+              </span>
+            </div>
+            <div className="grid gap-2 border-b border-brown/15 pb-4">
+              <span className="text-xs font-semibold uppercase text-brown/60">
+                Amount Paid
+              </span>
+              <span className="text-xl font-semibold">
+                {formatCurrency(confirmation?.downPaymentAmount ?? 0)}
               </span>
             </div>
             <div className="grid gap-2 border-b border-brown/15 pb-4">

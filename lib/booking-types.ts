@@ -46,6 +46,7 @@ export type BookingResponse = {
     receipt: {
       id: string;
       downPaymentAmount: number;
+      fullyPaid: boolean;
       status: string;
     } | null;
   };

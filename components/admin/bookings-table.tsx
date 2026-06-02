@@ -87,6 +87,7 @@ type BookingRow = {
   receipt: {
     id: string;
     status: string;
+    fullyPaid: boolean;
     receiptConfirmation: boolean;
     downPaymentAmount: string;
     proofFileName: string | null;
@@ -850,7 +851,15 @@ export function BookingsTable({
                           }
                         />
                         <Detail
-                          label="Down payment"
+                          label="Payment type"
+                          value={
+                            selectedBooking.receipt.fullyPaid
+                              ? "Full payment"
+                              : "50% payment"
+                          }
+                        />
+                        <Detail
+                          label="Amount paid"
                           value={selectedBooking.receipt.downPaymentAmount}
                         />
                         <Detail

@@ -59,9 +59,17 @@ export async function POST(
 
   const formData = await request.formData();
   const proof = formData.get("proof");
+  const paymentType = formData.get("paymentType");
 
   if (!(proof instanceof File)) {
     return Response.json({ error: "Please upload a receipt file." }, { status: 400 });
+  }
+
+  if (paymentType !== "half" && paymentType !== "full") {
+    return Response.json(
+      { error: "Please choose either 50% payment or full payment." },
+      { status: 400 },
+    );
   }
 
   if (!ALLOWED_MIME_TYPES.has(proof.type)) {
@@ -110,10 +118,25 @@ export async function POST(
   }
 
   const now = new Date();
+  const selectedPaymentAmount =
+    paymentType === "full" ? receipt.booking.total_price : receipt.booking.total_price * 0.5;
+  const fullyPaid = paymentType === "full";
+  const remainingBalance = Math.max(
+    receipt.booking.total_price - selectedPaymentAmount,
+    0,
+  );
+  const selectedCottage = receipt.booking.selected_cottage_id
+    ? await prisma.cottages.findUnique({
+        where: { id: receipt.booking.selected_cottage_id },
+        select: { name: true },
+      })
+    : null;
   const updatedReceipt = await prisma.receipt.update({
     where: { id: receipt.id },
     data: {
       status: "paid",
+      fullyPaid,
+      downPaymentAmount: selectedPaymentAmount,
       proofFilePath: filePath,
       proofFileName: proof.name,
       proofMimeType: proof.type,
@@ -131,7 +154,10 @@ export async function POST(
       checkIn: receipt.booking.checkIn,
       checkOut: receipt.booking.checkOut,
       totalPrice: receipt.booking.total_price,
-      downPaymentAmount: receipt.downPaymentAmount,
+      downPaymentAmount: selectedPaymentAmount,
+      remainingBalance,
+      fullyPaid,
+      cottageName: selectedCottage?.name ?? null,
       proofFileName: updatedReceipt.proofFileName,
       proofViewUrl: updatedReceipt.proofViewUrl,
       paidAt: updatedReceipt.paidAt,
