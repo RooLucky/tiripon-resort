@@ -153,6 +153,7 @@ async function main() {
           description: cottage.description,
           price: cottage.price,
           capacity: cottage.capacity,
+          quantity: cottage.quantity,
           imageUrl: cottage.imageFile ? undefined : null,
         },
       })
@@ -162,6 +163,7 @@ async function main() {
           description: cottage.description,
           price: cottage.price,
           capacity: cottage.capacity,
+          quantity: cottage.quantity,
           imageUrl: null,
         },
       });
