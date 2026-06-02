@@ -103,6 +103,29 @@ export default async function ReceiptPage({
             </div>
             <div>
               <span className="text-xs font-semibold uppercase tracking-wide text-brown/60">
+                Guests
+              </span>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <div className="rounded-xl bg-cream/70 p-3 md:rounded-none">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-brown/55">
+                    Adults
+                  </p>
+                  <p className="mt-1 text-lg font-semibold">
+                    {receipt.booking.number_of_adult}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-cream/70 p-3 md:rounded-none">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-brown/55">
+                    Kids
+                  </p>
+                  <p className="mt-1 text-lg font-semibold">
+                    {receipt.booking.number_of_kids}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div>
+              <span className="text-xs font-semibold uppercase tracking-wide text-brown/60">
                 Cottages
               </span>
               <ul className="mt-2 grid gap-2">
