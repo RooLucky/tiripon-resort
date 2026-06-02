@@ -92,6 +92,54 @@ function GuestStepper({
   );
 }
 
+function CottageImagePlaceholder() {
+  return (
+    <div className="flex flex-col items-center gap-3 text-brown/65">
+      <svg
+        viewBox="0 0 120 96"
+        aria-hidden="true"
+        className="h-24 w-28 animate-pulse"
+        fill="none"
+      >
+        <path
+          d="M18 50 60 18l42 32"
+          stroke="currentColor"
+          strokeWidth="6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M30 46v38h60V46"
+          stroke="currentColor"
+          strokeWidth="6"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M50 84V62h20v22"
+          stroke="currentColor"
+          strokeWidth="6"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M38 56h12M78 56h8"
+          stroke="currentColor"
+          strokeWidth="6"
+          strokeLinecap="round"
+        />
+        <path
+          d="M22 84h86"
+          stroke="currentColor"
+          strokeWidth="6"
+          strokeLinecap="round"
+        />
+      </svg>
+      <span className="font-googlesansflex text-xs font-semibold uppercase tracking-wide">
+        Loading cottage
+      </span>
+    </div>
+  );
+}
+
 export default function SecondPage() {
   const { createBooking, error, isLoading, reset } = useBookingRequest();
   const [name, setName] = useState("");
@@ -112,6 +160,9 @@ export default function SecondPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [reservedByCottageId, setReservedByCottageId] = useState<
     Record<string, number>
+  >({});
+  const [loadedCottageImages, setLoadedCottageImages] = useState<
+    Record<string, boolean>
   >({});
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
@@ -651,18 +702,48 @@ export default function SecondPage() {
                               }`}
                             >
                               <div className="relative aspect-square w-full overflow-hidden">
+                                <div
+                                  className={`pointer-events-none absolute inset-0 grid place-items-center bg-cream transition-opacity duration-300 ${
+                                    loadedCottageImages[cottage.id]
+                                      ? "opacity-0"
+                                      : "opacity-100"
+                                  }`}
+                                >
+                                  <CottageImagePlaceholder />
+                                </div>
                                 {cottage.imageUrl ? (
                                   <img
                                     src={cottage.imageUrl}
                                     alt={cottage.name}
-                                    className="w-full h-full object-cover object-[center_75%]"
+                                    onLoad={() =>
+                                      setLoadedCottageImages((current) => ({
+                                        ...current,
+                                        [cottage.id]: true,
+                                      }))
+                                    }
+                                    className={`h-full w-full object-cover object-[center_75%] transition-opacity duration-300 ${
+                                      loadedCottageImages[cottage.id]
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    }`}
                                   />
                                 ) : (
                                   <Image
                                     src={"/logo/web.png"}
                                     alt={cottage.name}
                                     fill
-                                    className="object-contain"
+                                    sizes="(min-width: 768px) 50vw, 100vw"
+                                    onLoad={() =>
+                                      setLoadedCottageImages((current) => ({
+                                        ...current,
+                                        [cottage.id]: true,
+                                      }))
+                                    }
+                                    className={`object-contain transition-opacity duration-300 ${
+                                      loadedCottageImages[cottage.id]
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    }`}
                                   />
                                 )}
                                 <motion.button
