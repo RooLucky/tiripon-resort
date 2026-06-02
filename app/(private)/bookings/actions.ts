@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
+import { sendGuestReceiptDecisionEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import { getReceiptsBucketName, getSupabaseAdminClient } from "@/lib/supabase-server";
 
@@ -150,7 +151,7 @@ export async function confirmReceipt(receiptId: string) {
     throw new Error("Invalid receipt id.");
   }
 
-  await prisma.receipt.update({
+  const receipt = await prisma.receipt.update({
     where: {
       id: receiptId,
     },
@@ -158,7 +159,37 @@ export async function confirmReceipt(receiptId: string) {
       status: "paid",
       receipt_confirmation: true,
     },
+    include: {
+      booking: true,
+    },
   });
+
+  if (receipt.booking.email) {
+    const selectedCottage = receipt.booking.selected_cottage_id
+      ? await prisma.cottages.findUnique({
+          where: { id: receipt.booking.selected_cottage_id },
+          select: { name: true },
+        })
+      : null;
+
+    try {
+      await sendGuestReceiptDecisionEmail({
+        to: receipt.booking.email,
+        name: receipt.booking.name,
+        decision: "confirmed",
+        totalPrice: receipt.booking.total_price,
+        paidAmount: receipt.downPaymentAmount,
+        remainingBalance: receipt.fullyPaid
+          ? 0
+          : Math.max(receipt.booking.total_price - receipt.downPaymentAmount, 0),
+        fullyPaid: receipt.fullyPaid,
+        cottageName: selectedCottage?.name ?? null,
+        proofFileName: receipt.proofFileName,
+      });
+    } catch (error) {
+      console.error("Failed to send guest receipt confirmation email", error);
+    }
+  }
 
   revalidatePath("/bookings");
 }
@@ -169,13 +200,41 @@ export async function denyReceipt(receiptId: string) {
     throw new Error("Invalid receipt id.");
   }
 
-  await prisma.receipt.update({
+  const receipt = await prisma.receipt.update({
     where: { id: receiptId },
     data: {
       status: "denied",
       receipt_confirmation: false,
     },
+    include: {
+      booking: true,
+    },
   });
+
+  if (receipt.booking.email) {
+    const selectedCottage = receipt.booking.selected_cottage_id
+      ? await prisma.cottages.findUnique({
+          where: { id: receipt.booking.selected_cottage_id },
+          select: { name: true },
+        })
+      : null;
+
+    try {
+      await sendGuestReceiptDecisionEmail({
+        to: receipt.booking.email,
+        name: receipt.booking.name,
+        decision: "denied",
+        totalPrice: receipt.booking.total_price,
+        paidAmount: receipt.downPaymentAmount,
+        remainingBalance: receipt.booking.total_price,
+        fullyPaid: receipt.fullyPaid,
+        cottageName: selectedCottage?.name ?? null,
+        proofFileName: receipt.proofFileName,
+      });
+    } catch (error) {
+      console.error("Failed to send guest receipt denial email", error);
+    }
+  }
 
   revalidatePath("/bookings");
 }

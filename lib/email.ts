@@ -27,6 +27,18 @@ type AdminPaymentNotificationPayload = {
   paidAt: Date | null;
 };
 
+type GuestReceiptDecisionEmailPayload = {
+  to: string;
+  name: string;
+  decision: "confirmed" | "denied";
+  totalPrice: number;
+  paidAmount: number;
+  remainingBalance: number;
+  fullyPaid: boolean;
+  cottageName: string | null;
+  proofFileName: string | null;
+};
+
 function getPublicSiteUrl() {
   const raw =
     process.env.AUTH_URL ??
@@ -372,5 +384,78 @@ export async function sendAdminPaymentNotification({
           }
         : undefined,
     ),
+  });
+}
+
+export async function sendGuestReceiptDecisionEmail({
+  to,
+  name,
+  decision,
+  totalPrice,
+  paidAmount,
+  remainingBalance,
+  fullyPaid,
+  cottageName,
+  proofFileName,
+}: GuestReceiptDecisionEmailPayload) {
+  const smtp = getSmtpConfig();
+  const transporter = createTransporter(smtp);
+  const isConfirmed = decision === "confirmed";
+  const title = isConfirmed ? "Payment Confirmed" : "Payment Receipt Denied";
+  const intro = isConfirmed
+    ? "Your payment receipt has been reviewed and confirmed by Basagan Resort."
+    : "Your payment receipt has been reviewed, but it was denied by Basagan Resort.";
+  const actionText = isConfirmed
+    ? fullyPaid
+      ? "Your reservation is fully paid. Thank you for completing your payment."
+      : "Your reservation down payment is confirmed. Please settle the remaining balance at the resort."
+    : "Please contact Basagan Resort or submit a valid payment receipt so we can continue processing your reservation.";
+  const rows: Array<[string, string]> = [
+    ["Selected cottage", formatOptional(cottageName)],
+    ["Payment type", fullyPaid ? "Full payment" : "50% payment"],
+    ["Booking total", formatCurrency(totalPrice)],
+    [isConfirmed ? "Amount confirmed" : "Submitted amount", formatCurrency(paidAmount)],
+    [isConfirmed ? "Remaining balance" : "Balance still pending", formatCurrency(remainingBalance)],
+    ["Receipt file", formatOptional(proofFileName)],
+  ];
+
+  await transporter.sendMail({
+    from: `"${smtp.fromName}" <${smtp.from}>`,
+    to,
+    subject: `Basagan Resort ${title}`,
+    text: [
+      `Dear ${name},`,
+      "",
+      intro,
+      actionText,
+      "",
+      ...rows.map(([label, value]) => `${label}: ${value}`),
+      "",
+      "Thank you,",
+      "Basagan Resort Reservations",
+    ].join("\n"),
+    html: `
+      <div style="margin: 0; padding: 0; background: #f5efe3;">
+        <div style="max-width: 640px; margin: 0 auto; padding: 24px 12px; font-family: Arial, sans-serif; color: #4b382f;">
+          <div style="background: #ffffff; border: 1px solid #e1d4bd; overflow: hidden;">
+            <div style="padding: 24px 18px 18px; background: ${isConfirmed ? "#4b382f" : "#7a3d33"}; color: #fffaf0;">
+              <p style="margin: 0 0 8px; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;">Basagan Resort</p>
+              <h1 style="margin: 0; font-size: 24px; line-height: 1.25; font-weight: 600;">${escapeHtml(title)}</h1>
+            </div>
+            <div style="padding: 22px 16px; line-height: 1.55;">
+              <p style="margin: 0 0 14px;">Dear ${escapeHtml(name)},</p>
+              <p style="margin: 0 0 12px;">${escapeHtml(intro)}</p>
+              <p style="margin: 0 0 18px;">${escapeHtml(actionText)}</p>
+              <table style="width: 100%; border-collapse: collapse; background: #fffaf0; border: 1px solid #eadfcd; table-layout: fixed;">
+                <tbody>${createAdminDetailsRows(rows)}</tbody>
+              </table>
+              <p style="margin: 18px 0 0; font-size: 13px; color: #6f5a4f;">
+                For questions about your reservation, please contact Basagan Resort directly.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `,
   });
 }

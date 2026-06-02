@@ -120,6 +120,87 @@ export default async function ReceiptPage({
             </div>
           </div>
 
+          <div className="mt-8 rounded-2xl border border-brown/10 bg-cream/70 p-4 font-googlesansflex shadow-sm md:rounded-none md:p-5">
+            <div className="flex flex-col gap-2 border-b border-brown/10 pb-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-brown/60">
+                  Payment Summary
+                </p>
+                <p className="mt-1 text-sm leading-6 text-brown/70">
+                  Review the reservation amount and submitted payment details.
+                </p>
+              </div>
+              <span className="inline-flex w-fit rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brown shadow-sm md:rounded-none">
+                {receipt.status}
+              </span>
+            </div>
+
+            <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+              <div className="rounded-xl bg-white p-3 md:rounded-none">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-brown/55">
+                  Booking total
+                </dt>
+                <dd className="mt-1 text-lg font-semibold">
+                  {formatCurrency(receipt.booking.total_price)}
+                </dd>
+              </div>
+              <div className="rounded-xl bg-white p-3 md:rounded-none">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-brown/55">
+                  Payment type
+                </dt>
+                <dd className="mt-1 text-lg font-semibold">
+                  {isPaid
+                    ? receipt.fullyPaid
+                      ? "Full payment"
+                      : "50% payment"
+                    : "Pending"}
+                </dd>
+              </div>
+              <div className="rounded-xl bg-white p-3 md:rounded-none">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-brown/55">
+                  50% payment option
+                </dt>
+                <dd className="mt-1 text-lg font-semibold">
+                  {formatCurrency(halfPaymentAmount)}
+                </dd>
+              </div>
+              <div className="rounded-xl bg-white p-3 md:rounded-none">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-brown/55">
+                  Full payment option
+                </dt>
+                <dd className="mt-1 text-lg font-semibold">
+                  {formatCurrency(fullPaymentAmount)}
+                </dd>
+              </div>
+              <div className="rounded-xl bg-white p-3 md:rounded-none">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-brown/55">
+                  Remaining balance
+                </dt>
+                <dd className="mt-1 text-lg font-semibold">
+                  {formatCurrency(remainingBalance)}
+                </dd>
+              </div>
+              <div className="rounded-xl bg-white p-3 md:rounded-none">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-brown/55">
+                  Upload link expires
+                </dt>
+                <dd className="mt-1 break-words font-semibold">
+                  {formatDate(expiresAt)}
+                </dd>
+              </div>
+              {receipt.proofFileName && (
+                <div className="rounded-xl bg-white p-3 sm:col-span-2 md:rounded-none">
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-brown/55">
+                    Uploaded file
+                  </dt>
+                  <dd className="mt-1 break-words font-semibold">
+                    {receipt.proofFileName}
+                  </dd>
+                </div>
+              )}
+            </dl>
+          </div>
+
           <Link
             href="/"
             className="mt-8 inline-flex h-11 w-full items-center justify-center rounded-full bg-brown px-6 font-googlesansflex text-sm font-semibold text-cream sm:w-auto"
@@ -153,34 +234,6 @@ export default async function ReceiptPage({
             />
           </div>
           <GcashPaymentNumber number={GCASH_PAYMENT_NUMBER} />
-
-          <div className="mt-6 grid gap-2 rounded-xl bg-cream/55 p-4 font-googlesansflex text-sm md:rounded-none md:bg-transparent md:p-0">
-            <p className="break-words">
-              Status:{" "}
-              <span className="font-semibold capitalize">{receipt.status}</span>
-            </p>
-            <p className="break-words">
-              Booking total: {formatCurrency(receipt.booking.total_price)}
-            </p>
-            {isPaid && (
-              <p className="break-words">
-                Payment type: {receipt.fullyPaid ? "Full payment" : "50% payment"}
-              </p>
-            )}
-            <p className="break-words">
-              50% payment option: {formatCurrency(halfPaymentAmount)}
-            </p>
-            <p className="break-words">
-              Full payment option: {formatCurrency(fullPaymentAmount)}
-            </p>
-            <p className="break-words">
-              Remaining balance: {formatCurrency(remainingBalance)}
-            </p>
-            <p className="break-words">Upload link expires: {formatDate(expiresAt)}</p>
-            {receipt.proofFileName && (
-              <p className="break-words">Uploaded file: {receipt.proofFileName}</p>
-            )}
-          </div>
 
           <ReceiptUploadForm
             receiptId={receipt.id}

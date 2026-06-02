@@ -11,7 +11,7 @@ const cottagesBucket = process.env.SUPABASE_COTTAGES_BUCKET ?? "cottages";
 
 const defaultCottages = [
   {
-    name: "Classic Cabana",
+    name: "Cabana 1",
     description:
       "A straightforward day-use cabana setup with open-air comfort for quick family breaks.",
     price: 500,
@@ -20,7 +20,7 @@ const defaultCottages = [
     quantity: 1,
   },
   {
-    name: "Poolside Cabana",
+    name: "Cabana 2",
     description:
       "Steps from the water with shaded seating, ideal for guests who want easy pool access all day.",
     price: 400,
@@ -29,7 +29,7 @@ const defaultCottages = [
     quantity: 1,
   },
   {
-    name: "Garden Cabana",
+    name: "Cabana 3",
     description:
       "Set beside lush greenery with a quieter atmosphere, designed for laid-back gatherings and privacy.",
     price: 400,
@@ -38,7 +38,7 @@ const defaultCottages = [
     quantity: 1,
   },
   {
-    name: "5ft Cottage",
+    name: "Cabana 4",
     description:
       "Compact 5ft cottage option for small groups seeking a simple shaded stay near resort amenities.",
     price: 400,
@@ -47,7 +47,7 @@ const defaultCottages = [
     quantity: 1,
   },
   {
-    name: "Family Cabana",
+    name: "Cabana 5",
     description:
       "A wider cabana layout with extra seating space, suited for bigger groups and all-day stays.",
     price: 300,
