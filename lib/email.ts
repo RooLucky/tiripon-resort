@@ -9,6 +9,31 @@ type ReservationEmailPayload = {
   downPaymentAmount: number;
 };
 
+type AdminReservationNotificationPayload = {
+  name: string;
+  email: string | null;
+  phone: string | null;
+  checkIn: Date | null;
+  checkOut: Date | null;
+  totalPrice: number;
+  downPaymentAmount: number;
+  cottageName?: string | null;
+  summary?: string | null;
+};
+
+type AdminPaymentNotificationPayload = {
+  name: string;
+  email: string | null;
+  phone: string | null;
+  checkIn: Date | null;
+  checkOut: Date | null;
+  totalPrice: number;
+  downPaymentAmount: number;
+  proofFileName: string | null;
+  proofViewUrl: string | null;
+  paidAt: Date | null;
+};
+
 function getPublicSiteUrl() {
   const raw =
     process.env.AUTH_URL ??
@@ -46,18 +71,42 @@ function resolveReceiptUrl(receiptUrl: string) {
   }
 }
 
+function resolveSitePath(pathname: string) {
+  const publicSiteUrl = getPublicSiteUrl();
+  if (!publicSiteUrl) return pathname;
+
+  return new URL(pathname, publicSiteUrl).toString();
+}
+
 function getSmtpConfig() {
   const host = process.env.SMTP_HOST;
   const port = Number(process.env.SMTP_PORT ?? 587);
   const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
+  const pass = process.env.SMTP_PASS?.replace(/\s/g, "");
   const from = process.env.SMTP_FROM ?? user;
+  const fromName = process.env.SMTP_FROM_NAME ?? "Basagan Resort Reservations";
 
   if (!host || !user || !pass || !from) {
     throw new Error("SMTP is not fully configured.");
   }
 
-  return { host, port, user, pass, from };
+  return { host, port, user, pass, from, fromName };
+}
+
+function getNotificationRecipient() {
+  return process.env.RESERVATION_NOTIFY_TO ?? process.env.SMTP_USER;
+}
+
+function createTransporter(smtp: ReturnType<typeof getSmtpConfig>) {
+  return nodemailer.createTransport({
+    host: smtp.host,
+    port: smtp.port,
+    secure: smtp.port === 465,
+    auth: {
+      user: smtp.user,
+      pass: smtp.pass,
+    },
+  });
 }
 
 function formatCurrency(value: number) {
@@ -81,6 +130,70 @@ function escapeHtml(value: string) {
   );
 }
 
+function formatDateTime(value: Date | null) {
+  if (!value) return "Not set";
+
+  return new Intl.DateTimeFormat("en-PH", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Asia/Manila",
+  }).format(value);
+}
+
+function formatOptional(value: string | null | undefined) {
+  return value && value.trim().length > 0 ? value : "Not provided";
+}
+
+function createAdminDetailsRows(rows: Array<[string, string]>) {
+  return rows
+    .map(
+      ([label, value]) => `
+        <tr>
+          <td style="padding: 10px 12px; border-bottom: 1px solid #eadfcd; color: #6f5a4f; font-size: 13px; line-height: 1.4;">${escapeHtml(label)}</td>
+          <td style="padding: 10px 12px; border-bottom: 1px solid #eadfcd; font-weight: 600; font-size: 14px; line-height: 1.4; word-break: break-word;">${escapeHtml(value)}</td>
+        </tr>
+      `,
+    )
+    .join("");
+}
+
+function createAdminEmailHtml(
+  title: string,
+  intro: string,
+  rows: Array<[string, string]>,
+  actionUrl?: string,
+) {
+  const actionButton = actionUrl
+    ? `
+      <div style="margin: 24px 0 4px; text-align: center;">
+        <a href="${escapeHtml(actionUrl)}" style="display: inline-block; background: #4b382f; color: #fffaf0; text-decoration: none; padding: 13px 18px; font-weight: 700; font-size: 14px; line-height: 1.2; border-radius: 0;">
+          Open Bookings
+        </a>
+      </div>
+    `
+    : "";
+
+  return `
+    <div style="margin: 0; padding: 0; background: #f5efe3;">
+      <div style="max-width: 640px; margin: 0 auto; padding: 20px 10px; font-family: Arial, sans-serif; color: #4b382f;">
+        <div style="background: #ffffff; border: 1px solid #e1d4bd; overflow: hidden;">
+          <div style="padding: 22px 18px 16px; background: #4b382f; color: #fffaf0;">
+            <p style="margin: 0 0 8px; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;">Basagan Resort</p>
+            <h1 style="margin: 0; font-size: 22px; line-height: 1.25; font-weight: 600;">${escapeHtml(title)}</h1>
+          </div>
+          <div style="padding: 20px 14px; line-height: 1.55;">
+            <p style="margin: 0 0 18px;">${escapeHtml(intro)}</p>
+            <table style="width: 100%; border-collapse: collapse; background: #fffaf0; border: 1px solid #eadfcd; table-layout: fixed;">
+              <tbody>${createAdminDetailsRows(rows)}</tbody>
+            </table>
+            ${actionButton}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 export async function sendReservationEmail({
   to,
   name,
@@ -94,20 +207,12 @@ export async function sendReservationEmail({
   const safeReceiptUrl = escapeHtml(publicReceiptUrl);
   const formattedTotalPrice = formatCurrency(totalPrice);
   const formattedDownPaymentAmount = formatCurrency(downPaymentAmount);
-  const transporter = nodemailer.createTransport({
-    host: smtp.host,
-    port: smtp.port,
-    secure: smtp.port === 465,
-    auth: {
-      user: smtp.user,
-      pass: smtp.pass,
-    },
-  });
+  const transporter = createTransporter(smtp);
 
   const qrPath = path.join(process.cwd(), "public", "images", "qr.jpg");
 
   await transporter.sendMail({
-    from: `"Basagan Resort Reservations" <${smtp.from}>`,
+    from: `"${smtp.fromName}" <${smtp.from}>`,
     to,
     subject: "Basagan Resort Reservation Payment Instructions",
     text: [
@@ -186,5 +291,108 @@ export async function sendReservationEmail({
         cid: "reservation-qr",
       },
     ],
+  });
+}
+
+export async function sendAdminReservationNotification({
+  name,
+  email,
+  phone,
+  checkIn,
+  checkOut,
+  totalPrice,
+  downPaymentAmount,
+  cottageName,
+  summary,
+}: AdminReservationNotificationPayload) {
+  const smtp = getSmtpConfig();
+  const to = getNotificationRecipient();
+
+  if (!to) {
+    throw new Error("Reservation notification recipient is not configured.");
+  }
+
+  const bookingsUrl = resolveSitePath("/bookings");
+  const rows: Array<[string, string]> = [
+    ["Guest", name],
+    ["Email", formatOptional(email)],
+    ["Phone", formatOptional(phone)],
+    ["Check-in", formatDateTime(checkIn)],
+    ["Check-out", formatDateTime(checkOut)],
+    ["Cottage", formatOptional(cottageName)],
+    ["Booking total", formatCurrency(totalPrice)],
+    ["Required down payment", formatCurrency(downPaymentAmount)],
+    ["Summary", formatOptional(summary)],
+  ];
+
+  await createTransporter(smtp).sendMail({
+    from: `"${smtp.fromName}" <${smtp.from}>`,
+    to,
+    replyTo: email ?? undefined,
+    subject: `New reservation request: ${name}`,
+    text: [
+      "New reservation request received.",
+      "Open the admin Bookings page to review it:",
+      bookingsUrl,
+      "",
+      ...rows.map(([label, value]) => `${label}: ${value}`),
+    ].join("\n"),
+    html: createAdminEmailHtml(
+      "New Reservation Request",
+      "A guest submitted a new reservation request. Open the Bookings page to review it.",
+      rows,
+      bookingsUrl,
+    ),
+  });
+}
+
+export async function sendAdminPaymentNotification({
+  name,
+  email,
+  phone,
+  checkIn,
+  checkOut,
+  totalPrice,
+  downPaymentAmount,
+  proofFileName,
+  proofViewUrl,
+  paidAt,
+}: AdminPaymentNotificationPayload) {
+  const smtp = getSmtpConfig();
+  const to = getNotificationRecipient();
+
+  if (!to) {
+    throw new Error("Payment notification recipient is not configured.");
+  }
+
+  const rows: Array<[string, string]> = [
+    ["Guest", name],
+    ["Email", formatOptional(email)],
+    ["Phone", formatOptional(phone)],
+    ["Check-in", formatDateTime(checkIn)],
+    ["Check-out", formatDateTime(checkOut)],
+    ["Booking total", formatCurrency(totalPrice)],
+    ["Required down payment", formatCurrency(downPaymentAmount)],
+    ["Receipt file", formatOptional(proofFileName)],
+    ["Receipt proof link", formatOptional(proofViewUrl)],
+    ["Paid/uploaded at", formatDateTime(paidAt)],
+  ];
+
+  await createTransporter(smtp).sendMail({
+    from: `"${smtp.fromName}" <${smtp.from}>`,
+    to,
+    replyTo: email ?? undefined,
+    subject: `Payment receipt uploaded: ${name}`,
+    text: [
+      "Payment receipt uploaded for a reservation.",
+      "",
+      ...rows.map(([label, value]) => `${label}: ${value}`),
+    ].join("\n"),
+    html: createAdminEmailHtml(
+      "Payment Receipt Uploaded",
+      "A guest uploaded payment proof for a reservation.",
+      rows,
+      resolveSitePath("/bookings"),
+    ),
   });
 }

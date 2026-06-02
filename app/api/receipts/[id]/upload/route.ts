@@ -1,5 +1,6 @@
-import { getReceiptsBucketName, getSupabaseAdminClient } from "@/lib/supabase-server";
+import { sendAdminPaymentNotification } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
+import { getReceiptsBucketName, getSupabaseAdminClient } from "@/lib/supabase-server";
 
 const RECEIPT_LINK_TTL_MS = 30 * 60 * 1000;
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -33,6 +34,7 @@ export async function POST(
 
   const receipt = await prisma.receipt.findUnique({
     where: { id: receiptId },
+    include: { booking: true },
   });
 
   if (!receipt) {
@@ -121,9 +123,26 @@ export async function POST(
     },
   });
 
+  try {
+    await sendAdminPaymentNotification({
+      name: receipt.booking.name,
+      email: receipt.booking.email,
+      phone: receipt.booking.phone,
+      checkIn: receipt.booking.checkIn,
+      checkOut: receipt.booking.checkOut,
+      totalPrice: receipt.booking.total_price,
+      downPaymentAmount: receipt.downPaymentAmount,
+      proofFileName: updatedReceipt.proofFileName,
+      proofViewUrl: updatedReceipt.proofViewUrl,
+      paidAt: updatedReceipt.paidAt,
+    });
+  } catch (error) {
+    console.error("Failed to send admin payment notification", error);
+  }
+
   return Response.json({
     receipt: updatedReceipt,
     proofUrl: signedUrlData.signedUrl,
-    message: "Receipt uploaded and reservation .",
+    message: "Receipt uploaded and reservation payment recorded.",
   });
 }

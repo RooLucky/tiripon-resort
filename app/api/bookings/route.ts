@@ -1,5 +1,8 @@
 import type { BookingRequestPayload } from "@/lib/booking-types";
-import { sendReservationEmail } from "@/lib/email";
+import {
+  sendAdminReservationNotification,
+  sendReservationEmail,
+} from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 
 const CHECKOUT_TIME = "5:30 PM";
@@ -218,6 +221,22 @@ export async function POST(request: Request) {
     emailSent = true;
   } catch (error) {
     console.error("Failed to send reservation email", error);
+  }
+
+  try {
+    await sendAdminReservationNotification({
+      name: booking.name,
+      email: booking.email,
+      phone: booking.phone,
+      checkIn: booking.checkIn,
+      checkOut: booking.checkOut,
+      totalPrice: booking.total_price,
+      downPaymentAmount,
+      cottageName: selectedCottage.name,
+      summary: booking.summary,
+    });
+  } catch (error) {
+    console.error("Failed to send admin reservation notification", error);
   }
 
   return Response.json(
