@@ -1,13 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
+import { format } from "date-fns";
 import {
   Ban,
+  CalendarDays,
   CheckCircle2,
   Eye,
+  Filter,
   MoreHorizontal,
   ReceiptText,
   Trash2,
+  X,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
@@ -19,6 +23,7 @@ import {
 } from "@/app/(private)/bookings/actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,6 +48,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -90,12 +102,43 @@ type BookingsTableProps = {
   bookings: BookingRow[];
   currentPage?: number;
   pageSize?: number;
+  checkInDate?: string;
 };
+
+function dateFromDateKey(dateKey: string) {
+  const [year, month, day] = dateKey.split("-").map(Number);
+
+  if (!year || !month || !day) {
+    return undefined;
+  }
+
+  const date = new Date(year, month - 1, day);
+
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
+function dateKeyFromDate(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+const MONTH_OPTIONS = Array.from({ length: 12 }, (_, index) => ({
+  value: String(index),
+  label: new Date(2026, index, 1).toLocaleString("en-PH", {
+    month: "short",
+  }),
+}));
+
+const YEAR_OPTIONS = Array.from({ length: 7 }, (_, index) => 2020 + index);
 
 export function BookingsTable({
   bookings,
   currentPage = 1,
   pageSize = 10,
+  checkInDate = "",
 }: BookingsTableProps) {
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
   const [paymentFilter, setPaymentFilter] = useState<"all" | "unpaid_overdue">(
@@ -119,6 +162,8 @@ export function BookingsTable({
   const [proofZoom, setProofZoom] = useState(1);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isPending, startTransition] = useTransition();
+  const [dateFilterOpen, setDateFilterOpen] = useState(false);
+  const [draftCheckInDate, setDraftCheckInDate] = useState(checkInDate);
   const [availabilityOpen, setAvailabilityOpen] = useState(false);
   const [availabilityDate, setAvailabilityDate] = useState(() => {
     const now = new Date();
@@ -141,6 +186,34 @@ export function BookingsTable({
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [isRealtimeSubscribed, setIsRealtimeSubscribed] = useState(false);
   const [rows, setRows] = useState<BookingRow[]>(bookings);
+  const activeDateFilterLabel = useMemo(() => {
+    if (!checkInDate) return "";
+    const [year, month, day] = checkInDate.split("-").map(Number);
+    const date = new Date(year, month - 1, day);
+
+    if (Number.isNaN(date.getTime())) return checkInDate;
+
+    return new Intl.DateTimeFormat("en-PH", {
+      dateStyle: "medium",
+    }).format(date);
+  }, [checkInDate]);
+  const getBookingsApiUrl = useMemo(() => {
+    return () => {
+      const timezoneOffset =
+        typeof window !== "undefined" ? new Date().getTimezoneOffset() : -480;
+      const params = new URLSearchParams({
+        page: String(currentPage),
+        size: String(pageSize),
+        timezoneOffset: String(timezoneOffset),
+      });
+
+      if (checkInDate) {
+        params.set("checkInDate", checkInDate);
+      }
+
+      return `/api/bookings?${params.toString()}`;
+    };
+  }, [checkInDate, currentPage, pageSize]);
   const filteredRows = useMemo(() => {
     if (paymentFilter === "all") return rows;
 
@@ -181,14 +254,15 @@ export function BookingsTable({
   }, [bookings]);
 
   useEffect(() => {
+    setDraftCheckInDate(checkInDate);
+  }, [checkInDate]);
+
+  useEffect(() => {
     const refreshRows = async () => {
       try {
-        const response = await fetch(
-          `/api/bookings?page=${currentPage}&size=${pageSize}`,
-          {
-            cache: "no-store",
-          },
-        );
+        const response = await fetch(getBookingsApiUrl(), {
+          cache: "no-store",
+        });
 
         if (!response.ok) return;
 
@@ -235,12 +309,12 @@ export function BookingsTable({
       setIsRealtimeSubscribed(false);
       void supabase.removeChannel(channel);
     };
-  }, [currentPage, supabase]);
+  }, [currentPage, getBookingsApiUrl, supabase]);
 
   useEffect(() => {
     const interval = setInterval(
       () => {
-        void fetch(`/api/bookings?page=${currentPage}&size=${pageSize}`, {
+        void fetch(getBookingsApiUrl(), {
           cache: "no-store",
         })
           .then((response) => (response.ok ? response.json() : null))
@@ -253,7 +327,7 @@ export function BookingsTable({
     );
 
     return () => clearInterval(interval);
-  }, [currentPage, isRealtimeSubscribed, pageSize]);
+  }, [getBookingsApiUrl, isRealtimeSubscribed]);
 
   useEffect(() => {
     if (!availabilityOpen) return;
@@ -300,10 +374,55 @@ export function BookingsTable({
       .finally(() => setIsLoadingAvailability(false));
   }, [availabilityDate, availabilityOpen]);
 
+  const applyDateFilter = () => {
+    const params = new URLSearchParams({
+      page: "1",
+      size: String(pageSize),
+    });
+
+    if (draftCheckInDate) {
+      params.set("checkInDate", draftCheckInDate);
+    }
+
+    window.location.assign(`/bookings?${params.toString()}`);
+  };
+
+  const clearDateFilter = () => {
+    window.location.assign(`/bookings?page=1&size=${pageSize}`);
+  };
+  const draftDate = dateFromDateKey(draftCheckInDate) ?? new Date();
+  const setDraftMonth = (month: number) => {
+    const nextDate = new Date(draftDate);
+    nextDate.setMonth(month);
+    setDraftCheckInDate(dateKeyFromDate(nextDate));
+  };
+  const setDraftYear = (year: number) => {
+    const nextDate = new Date(draftDate);
+    nextDate.setFullYear(year);
+    setDraftCheckInDate(dateKeyFromDate(nextDate));
+  };
+
   return (
     <>
       <div className="flex flex-wrap items-center justify-end gap-6">
-        <div className="flex gap-2 items-center">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {checkInDate && (
+            <Badge variant="outline" className="gap-1">
+              <CalendarDays className="size-3" />
+              {activeDateFilterLabel}
+            </Badge>
+          )}
+          {checkInDate && (
+            <Button
+              type="button"
+              size="icon-sm"
+              variant="outline"
+              onClick={clearDateFilter}
+            >
+              <X />
+              <span className="sr-only">Clear check-in date filter</span>
+            </Button>
+          )}
           <label className="inline-flex items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -351,6 +470,10 @@ export function BookingsTable({
                 Cards {viewMode === "cards" ? "•" : ""}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => setDateFilterOpen(true)}>
+                <Filter />
+                Check-in date
+              </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setAvailabilityOpen(true)}>
                 Available Cottages
               </DropdownMenuItem>
@@ -565,7 +688,7 @@ export function BookingsTable({
             filteredRows.map((booking) => (
               <div
                 key={booking.id}
-                className="rounded-lg border bg-cream/30 p-4"
+                className="rounded-lg border bg-background p-4"
               >
                 <label className="inline-flex items-center gap-2 text-xs">
                   <input
@@ -634,7 +757,9 @@ export function BookingsTable({
                     type="button"
                     size="sm"
                     variant="outline"
-                    disabled={!booking.receipt || booking.receipt.status === "denied"}
+                    disabled={
+                      !booking.receipt || booking.receipt.status === "denied"
+                    }
                     onClick={() => setReceiptToDeny(booking)}
                   >
                     <Trash2 />
@@ -775,6 +900,107 @@ export function BookingsTable({
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={dateFilterOpen} onOpenChange={setDateFilterOpen}>
+        <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Filter by check-in date</DialogTitle>
+            <DialogDescription>
+              Show bookings whose check-in date matches the selected day.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4">
+            <div className="grid gap-2 text-sm">
+              <span>Check-in date</span>
+              <div className="flex h-10 items-center rounded-md border bg-background px-3">
+                <CalendarDays className="mr-2 size-4" />
+                {draftCheckInDate
+                  ? format(
+                      dateFromDateKey(draftCheckInDate) ?? new Date(),
+                      "PPP",
+                    )
+                  : "Select month, day, and year"}
+              </div>
+            </div>
+            <div className="rounded-lg border bg-background p-3">
+              <div className="mb-3 grid grid-cols-2 gap-2">
+                <Select
+                  value={String(draftDate.getMonth())}
+                  onValueChange={(value) => setDraftMonth(Number(value))}
+                >
+                  <SelectTrigger className="h-10 w-full rounded-md bg-background">
+                    <SelectValue placeholder="Month" />
+                  </SelectTrigger>
+                  <SelectContent
+                    className="z-[160]"
+                    position="popper"
+                    viewportClassName="h-44"
+                  >
+                    {MONTH_OPTIONS.map((month) => (
+                      <SelectItem key={month.value} value={month.value}>
+                        {month.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={String(draftDate.getFullYear())}
+                  onValueChange={(value) => setDraftYear(Number(value))}
+                >
+                  <SelectTrigger className="h-10 w-full rounded-md bg-background">
+                    <SelectValue placeholder="Year" />
+                  </SelectTrigger>
+                  <SelectContent
+                    className="z-[160]"
+                    position="popper"
+                    viewportClassName="h-44"
+                  >
+                    {YEAR_OPTIONS.map((year) => (
+                      <SelectItem key={year} value={String(year)}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Calendar
+                mode="single"
+                selected={draftDate}
+                month={draftDate}
+                onMonthChange={(month) => {
+                  setDraftCheckInDate(dateKeyFromDate(month));
+                }}
+                onSelect={(date) => {
+                  if (date) {
+                    setDraftCheckInDate(dateKeyFromDate(date));
+                  }
+                }}
+                startMonth={new Date(2020, 0)}
+                endMonth={new Date(2026, 11)}
+                className="mx-auto p-0"
+                initialFocus
+              />
+            </div>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={clearDateFilter}
+                disabled={!checkInDate && !draftCheckInDate}
+              >
+                Clear
+              </Button>
+              <Button
+                type="button"
+                onClick={applyDateFilter}
+                disabled={!draftCheckInDate}
+              >
+                Apply filter
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -999,20 +1225,28 @@ export function BookingsTable({
                 <TableBody>
                   {isLoadingAvailability ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="h-20 text-center text-muted-foreground">
+                      <TableCell
+                        colSpan={5}
+                        className="h-20 text-center text-muted-foreground"
+                      >
                         Loading...
                       </TableCell>
                     </TableRow>
                   ) : availabilityRows.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="h-20 text-center text-muted-foreground">
+                      <TableCell
+                        colSpan={5}
+                        className="h-20 text-center text-muted-foreground"
+                      >
                         No cottages found.
                       </TableCell>
                     </TableRow>
                   ) : (
                     availabilityRows.map((row) => (
                       <TableRow key={row.id}>
-                        <TableCell className="font-medium">{row.name}</TableCell>
+                        <TableCell className="font-medium">
+                          {row.name}
+                        </TableCell>
                         <TableCell>{row.capacity}</TableCell>
                         <TableCell>{row.quantity}</TableCell>
                         <TableCell>{row.reserved}</TableCell>

@@ -17,14 +17,16 @@ const defaultCottages = [
     price: 500,
     capacity: "10 - 12",
     imageFile: "cabana-1-500.png",
+    quantity: 1,
   },
   {
     name: "Poolside Cabana",
     description:
       "Steps from the water with shaded seating, ideal for guests who want easy pool access all day.",
     price: 400,
-    capacity: "10 - 12",
+    capacity: "6 - 8",
     imageFile: "cabana-2-400.png",
+    quantity: 1,
   },
   {
     name: "Garden Cabana",
@@ -33,6 +35,7 @@ const defaultCottages = [
     price: 400,
     capacity: "6 - 8",
     imageFile: "cabana-3-400.png",
+    quantity: 1,
   },
   {
     name: "5ft Cottage",
@@ -40,15 +43,17 @@ const defaultCottages = [
       "Compact 5ft cottage option for small groups seeking a simple shaded stay near resort amenities.",
     price: 400,
     capacity: "6 - 8",
-    imageFile: null,
+    imageFile: "cabana-5-400.png",
+    quantity: 1,
   },
   {
     name: "Family Cabana",
     description:
       "A wider cabana layout with extra seating space, suited for bigger groups and all-day stays.",
     price: 300,
-    capacity: "5",
+    capacity: "4 - 6",
     imageFile: "cabana-6-300.png",
+    quantity: 1,
   },
   {
     name: "Small Umbrella",
@@ -57,14 +62,16 @@ const defaultCottages = [
     price: 200,
     capacity: "2 - 4",
     imageFile: "small-umbrella-200.png",
+    quantity: 2,
   },
   {
     name: "Standard Umbrella",
     description:
       "Standard umbrella space with comfortable shade, suited for small groups and casual stays.",
     price: 250,
-    capacity: "4 - 6",
+    capacity: "2 - 6",
     imageFile: "standard-umbrella-250.png",
+    quantity: 3,
   },
 ] as const;
 

@@ -27,18 +27,71 @@ function formatDate(value: Date | null) {
   }).format(value);
 }
 
-function getPageHref(page: number, size: number) {
-  return `/bookings?page=${page}&size=${size}`;
+function getBookingDayRange(dateKey: string, timezoneOffset = -480) {
+  const [year, month, day] = dateKey.split("-").map(Number);
+
+  if (!year || !month || !day) {
+    return null;
+  }
+
+  const utcMidnight = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+  const utcNextMidnight = new Date(
+    Date.UTC(year, month - 1, day + 1, 0, 0, 0, 0),
+  );
+  const start = new Date(utcMidnight.getTime() + timezoneOffset * 60 * 1000);
+  const end = new Date(utcNextMidnight.getTime() + timezoneOffset * 60 * 1000);
+
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return null;
+  }
+
+  return { start, end };
+}
+
+function getPageHref(page: number, size: number, checkInDate?: string) {
+  const params = new URLSearchParams({
+    page: String(page),
+    size: String(size),
+  });
+
+  if (checkInDate) {
+    params.set("checkInDate", checkInDate);
+  }
+
+  return `/bookings?${params.toString()}`;
 }
 
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string | string[]; size?: string | string[] }>;
+  searchParams: Promise<{
+    page?: string | string[];
+    size?: string | string[];
+    checkInDate?: string | string[];
+  }>;
 }) {
   const params = await searchParams;
   const rawPage = Array.isArray(params.page) ? params.page[0] : params.page;
   const rawSize = Array.isArray(params.size) ? params.size[0] : params.size;
+  const rawCheckInDate = Array.isArray(params.checkInDate)
+    ? params.checkInDate[0]
+    : params.checkInDate;
+  const checkInDate =
+    rawCheckInDate && /^\d{4}-\d{2}-\d{2}$/.test(rawCheckInDate)
+      ? rawCheckInDate
+      : "";
+  const checkInRange = checkInDate ? getBookingDayRange(checkInDate) : null;
+  const bookingWhere = {
+    deleted: false,
+    ...(checkInRange
+      ? {
+          checkIn: {
+            gte: checkInRange.start,
+            lt: checkInRange.end,
+          },
+        }
+      : {}),
+  };
   const currentPage = Math.max(Number(rawPage ?? "1") || 1, 1);
   const selectedSize = PAGE_SIZE_OPTIONS.includes(Number(rawSize) as never)
     ? Number(rawSize)
@@ -50,9 +103,7 @@ export default async function AdminPage({
       orderBy: {
         createdAt: "desc",
       },
-      where: {
-        deleted: false,
-      },
+      where: bookingWhere,
       skip,
       take: selectedSize,
       include: {
@@ -60,9 +111,7 @@ export default async function AdminPage({
       },
     }),
     prisma.booking.count({
-      where: {
-        deleted: false,
-      },
+      where: bookingWhere,
     }),
   ]);
   const cottageIds = bookings
@@ -120,7 +169,7 @@ export default async function AdminPage({
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-4 md:p-7">
-      <div className="rounded-xl border border-border/80 bg-card/80 p-5 shadow-sm">
+      <div className="rounded-xl md:block hidden border border-border/80 bg-card/80 p-5 shadow-sm">
         <h1 className="text-3xl leading-tight text-brown">Bookings</h1>
         <p className="text-sm text-muted-foreground">
           Manage reservation requests, receipt proof, and connected cottages.
@@ -131,6 +180,7 @@ export default async function AdminPage({
         bookings={rows}
         currentPage={currentPage}
         pageSize={selectedSize}
+        checkInDate={checkInDate}
       />
 
       <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card/70 p-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
@@ -144,7 +194,7 @@ export default async function AdminPage({
             {PAGE_SIZE_OPTIONS.map((size) => (
               <PaginationLink
                 key={size}
-                href={getPageHref(1, size)}
+                href={getPageHref(1, size, checkInDate)}
                 isActive={size === selectedSize}
               >
                 {size}
@@ -156,7 +206,11 @@ export default async function AdminPage({
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious
-                href={getPageHref(Math.max(currentPage - 1, 1), selectedSize)}
+                href={getPageHref(
+                  Math.max(currentPage - 1, 1),
+                  selectedSize,
+                  checkInDate,
+                )}
                 aria-disabled={currentPage <= 1}
                 className={
                   currentPage <= 1 ? "pointer-events-none opacity-50" : ""
@@ -173,7 +227,7 @@ export default async function AdminPage({
               .map((page) => (
                 <PaginationItem key={page}>
                   <PaginationLink
-                    href={getPageHref(page, selectedSize)}
+                    href={getPageHref(page, selectedSize, checkInDate)}
                     isActive={page === currentPage}
                   >
                     {page}
@@ -185,6 +239,7 @@ export default async function AdminPage({
                 href={getPageHref(
                   Math.min(currentPage + 1, pageCount),
                   selectedSize,
+                  checkInDate,
                 )}
                 aria-disabled={currentPage >= pageCount}
                 className={

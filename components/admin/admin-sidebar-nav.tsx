@@ -68,7 +68,7 @@ export function AdminSidebarNav() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem>
+              {/* <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
                   isActive={pathname === "/chatbot-management"}
@@ -78,7 +78,7 @@ export function AdminSidebarNav() {
                     <span>Chatbot Nodes</span>
                   </Link>
                 </SidebarMenuButton>
-              </SidebarMenuItem>
+              </SidebarMenuItem> */}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

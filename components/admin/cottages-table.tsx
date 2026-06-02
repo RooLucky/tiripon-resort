@@ -3,6 +3,9 @@
 import { FormEvent, useState, useTransition } from "react";
 import { EllipsisVertical, Eye, Pencil, Plus, Trash2, ZoomIn, ZoomOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -210,48 +213,81 @@ export function CottagesTable({ cottages }: { cottages: CottageRow[] }) {
                 : "Add a new cottage entry for booking selection."}
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={submit} className="grid gap-3 md:grid-cols-2">
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Cottage name"
-              className="h-10 rounded-md border bg-background px-3 text-sm"
-              required
-            />
-            <input
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              placeholder="Price (e.g. 500)"
-              className="h-10 rounded-md border bg-background px-3 text-sm"
-              required
-            />
-            <input
-              value={capacity}
-              onChange={(e) => setCapacity(e.target.value)}
-              placeholder="Capacity (e.g. 10 - 12)"
-              className="h-10 rounded-md border bg-background px-3 text-sm"
-              required
-            />
-            <input
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
-              placeholder="Quantity (e.g. 10)"
-              className="h-10 rounded-md border bg-background px-3 text-sm"
-              required
-            />
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
-              className="h-10 rounded-md border bg-background px-3 text-sm"
-            />
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Description"
-              className="min-h-24 rounded-md border bg-background px-3 py-2 text-sm md:col-span-2"
-              required
-            />
+          <form onSubmit={submit} className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-2">
+              <Label htmlFor="cottage-name">Cottage name</Label>
+              <Input
+                id="cottage-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Family Cottage"
+                className="h-10"
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="cottage-price">Price</Label>
+              <Input
+                id="cottage-price"
+                type="number"
+                min="0"
+                step="0.01"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                placeholder="e.g. 500"
+                className="h-10"
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="cottage-capacity">Capacity</Label>
+              <Input
+                id="cottage-capacity"
+                value={capacity}
+                onChange={(e) => setCapacity(e.target.value)}
+                placeholder="e.g. 10 - 12"
+                className="h-10"
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="cottage-quantity">Quantity</Label>
+              <Input
+                id="cottage-quantity"
+                type="number"
+                min="1"
+                step="1"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                placeholder="e.g. 10"
+                className="h-10"
+                required
+              />
+            </div>
+            <div className="grid gap-2 md:col-span-2">
+              <Label htmlFor="cottage-image">Cottage image</Label>
+              <Input
+                id="cottage-image"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+                className="h-10"
+              />
+              <p className="text-xs text-muted-foreground">
+                Upload a JPG, PNG, or WEBP image.
+              </p>
+            </div>
+            <div className="grid gap-2 md:col-span-2">
+              <Label htmlFor="cottage-description">Description</Label>
+              <Textarea
+                id="cottage-description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Describe the cottage, amenities, or location."
+                className="min-h-24"
+                required
+              />
+            </div>
             <div className="md:col-span-2 flex items-center justify-between">
               {error ? (
                 <p className="text-sm text-destructive">{error}</p>

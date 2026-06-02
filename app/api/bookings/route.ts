@@ -291,14 +291,32 @@ export async function GET(request: Request) {
   const page = Math.max(Number(searchParams.get("page") ?? "1") || 1, 1);
   const size = Math.max(Number(searchParams.get("size") ?? `${PAGE_SIZE}`) || PAGE_SIZE, 1);
   const skip = (page - 1) * size;
+  const checkInDate = searchParams.get("checkInDate");
+  const listTimezoneOffset = searchParams.get("timezoneOffset");
+  const checkInRange =
+    checkInDate && /^\d{4}-\d{2}-\d{2}$/.test(checkInDate)
+      ? getBookingDayRange(
+          checkInDate,
+          listTimezoneOffset ? parseInt(listTimezoneOffset, 10) : -480,
+        )
+      : null;
+  const where = {
+    deleted: false,
+    ...(checkInRange
+      ? {
+          checkIn: {
+            gte: checkInRange.start,
+            lt: checkInRange.end,
+          },
+        }
+      : {}),
+  };
 
   const bookings = await prisma.booking.findMany({
     orderBy: {
       createdAt: "desc",
     },
-    where: {
-      deleted: false,
-    },
+    where,
     skip,
     take: size,
     include: {
