@@ -40,22 +40,37 @@ type GuestReceiptDecisionEmailPayload = {
 };
 
 function getPublicSiteUrl() {
-  const raw =
-    process.env.AUTH_URL ??
-    process.env.NEXTAUTH_URL ??
-    process.env.APP_URL ??
-    process.env.VERCEL_PROJECT_PRODUCTION_URL ??
-    "https://www.tiripon-spring-resort.com";
+  const candidates = [
+    process.env.AUTH_URL,
+    process.env.NEXTAUTH_URL,
+    process.env.APP_URL,
+    process.env.NEXT_PUBLIC_SITE_URL,
+    process.env.VERCEL_PROJECT_PRODUCTION_URL,
+    "https://www.tiripon-spring-resort.com",
+  ];
+  let localUrl: URL | null = null;
 
-  if (!raw) return null;
+  for (const raw of candidates) {
+    if (!raw) continue;
 
-  const normalized = raw.startsWith("http") ? raw : `https://${raw}`;
+    const normalized = raw.startsWith("http") ? raw : `https://${raw}`;
 
-  try {
-    return new URL(normalized);
-  } catch {
-    return null;
+    try {
+      const url = new URL(normalized);
+      const host = url.hostname.toLowerCase();
+
+      if (host === "localhost" || host === "127.0.0.1") {
+        localUrl ??= url;
+        continue;
+      }
+
+      return url;
+    } catch {
+      continue;
+    }
   }
+
+  return localUrl;
 }
 
 function resolveReceiptUrl(receiptUrl: string) {

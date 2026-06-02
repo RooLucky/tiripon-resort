@@ -38,7 +38,9 @@ function getRedirectUrl() {
     window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1";
 
-  return isLocalhost ? "http://localhost:3000" : process.env.AUTH_URL ?? "https://www.tiripon-spring-resort.com";
+  return isLocalhost
+    ? "http://localhost:3000"
+    : (process.env.AUTH_URL ?? "https://www.tiripon-spring-resort.com");
 }
 
 function formatDateTime(value: string | null) {
@@ -155,7 +157,10 @@ export function ReceiptUploadForm({
           >
             <div className="grid grid-cols-[auto_1fr] gap-3 rounded-xl border border-brown/15 bg-white p-3 leading-5 md:rounded-none">
               <RadioGroupItem id="payment-half" value="half" className="mt-1" />
-              <Label htmlFor="payment-half" className="grid cursor-pointer gap-1">
+              <Label
+                htmlFor="payment-half"
+                className="grid cursor-pointer gap-1"
+              >
                 <span className="font-semibold">
                   50% down payment - {formatCurrency(downPaymentAmount)}
                 </span>
@@ -166,7 +171,10 @@ export function ReceiptUploadForm({
             </div>
             <div className="grid grid-cols-[auto_1fr] gap-3 rounded-xl border border-brown/15 bg-white p-3 leading-5 md:rounded-none">
               <RadioGroupItem id="payment-full" value="full" className="mt-1" />
-              <Label htmlFor="payment-full" className="grid cursor-pointer gap-1">
+              <Label
+                htmlFor="payment-full"
+                className="grid cursor-pointer gap-1"
+              >
                 <span className="font-semibold">
                   Full payment - {formatCurrency(fullPaymentAmount)}
                 </span>
