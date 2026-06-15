@@ -16,7 +16,7 @@ const resortSlides = [
   },
   {
     name: "Golden Hours",
-    description: "Soft afternoon light and relaxed open-air comfort.",
+    description: "Soft afternoon light with relaxed open-air shade.",
     image: "/images/3.png",
     highlight:
       "Perfect for sunset photos, birthdays, and meaningful shared moments.",
@@ -106,11 +106,11 @@ export default function ThirdPage() {
       >
         <div className="text-center">
           <p className="font-googlesansflex text-sm font-semibold uppercase tracking-[0.12em] text-brown/75">
-            Accomodation & Comfort
+            Nature Pool Resort
           </p>
           <div className="mx-auto mt-2 h-px w-24 bg-tan" />
           <h2 className="mt-5 font-heading text-5xl md:text-7xl">
-            Rooms & Suites
+            Poolside Cottages
           </h2>
         </div>
 
@@ -139,7 +139,7 @@ export default function ThirdPage() {
                     {slide.name}
                   </h3>
                   <p className="mt-4 font-googlesansflex text-xs uppercase tracking-[0.12em] text-cream/70">
-                    Stay from
+                    Best for
                   </p>
                   <p className="mt-2 font-googlesansflex text-sm text-cream/80">
                     {slide.description}
@@ -171,7 +171,7 @@ export default function ThirdPage() {
                   {slide.name}
                 </h3>
                 <p className="mt-4 font-googlesansflex text-xs uppercase tracking-[0.12em] text-cream/70">
-                  Stay from
+                  Best for
                 </p>
                 <p className="mt-2 font-googlesansflex text-sm text-cream/80">
                   {slide.description}
